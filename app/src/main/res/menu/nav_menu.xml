@@ -5,7 +5,7 @@
         <item
             android:id="@+id/nav_serials"
             android:icon="@drawable/ic_menu_view"
-            android:title="TV Series" />
+            android:title="@string/title_activity_serial_list" />
         <item
             android:id="@+id/nav_by_url"
             android:icon="@drawable/ic_menu_slideshow"

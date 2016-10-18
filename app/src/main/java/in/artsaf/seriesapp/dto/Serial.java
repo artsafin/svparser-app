@@ -3,10 +3,14 @@ package in.artsaf.seriesapp.dto;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-public class Serial {
+import java.io.Serializable;
+
+public class Serial implements Serializable {
     public long id;
     public String name;
     public String image;
+
+    public Serial() { }
 
     public Serial(long id, String name, String image) {
         this.id = id;

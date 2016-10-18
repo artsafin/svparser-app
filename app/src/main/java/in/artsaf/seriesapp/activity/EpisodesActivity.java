@@ -1,11 +1,11 @@
-package in.artsaf.seriesapp;
+package in.artsaf.seriesapp.activity;
 
 import android.content.Intent;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import in.artsaf.seriesapp.seasonvar.LoadEpisodesTask;
+import in.artsaf.seriesapp.fragment.EpisodesFragment;
+import in.artsaf.seriesapp.R;
 
 public class EpisodesActivity extends AppCompatActivity {
 

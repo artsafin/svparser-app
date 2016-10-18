@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data.api;
 
 import android.net.Uri;
 import android.support.test.filters.SmallTest;
@@ -7,7 +7,7 @@ import android.support.test.runner.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static in.artsaf.seriesapp.api.SeriesProviderContract.*;
+import static in.artsaf.seriesapp.data.SeriesProviderContract.*;
 import static junit.framework.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class)

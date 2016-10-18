@@ -28,9 +28,6 @@ public class Episode {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("comment", comment)
-                .add("file", file)
-                .toString();
+        return comment.replace("<br>", "\n");
     }
 }

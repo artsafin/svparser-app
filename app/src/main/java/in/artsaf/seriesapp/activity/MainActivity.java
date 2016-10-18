@@ -1,8 +1,7 @@
-package in.artsaf.seriesapp;
+package in.artsaf.seriesapp.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,12 +13,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import in.artsaf.seriesapp.fragment.LoadByUrlFragment;
+import in.artsaf.seriesapp.R;
+import in.artsaf.seriesapp.fragment.SeasonsFragment;
+import in.artsaf.seriesapp.fragment.SerialListFragment;
 import in.artsaf.seriesapp.dto.Serial;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
-        LoadByUrlFragment.LoadByUrlInteractionListener,
-        SerialListFragment.SerialListFragmentHandler{
+        implements LoadByUrlFragment.LoadByUrlInteractionListener,
+        SerialListFragment.SerialListFragmentHandler {
+    public static final String EXTRA_SHOW_SERIALS = "show_serials";
+    public static final String EXTRA_SHOW_LOAD_BY_URL = "show_load_by_url";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,14 +38,24 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        new NavigationViewHelper((NavigationView) findViewById(R.id.nav_view), drawer)
+                .on(R.id.nav_serials, new NavigationViewHelper.NavigationViewHandler() {
+                    @Override
+                    public void handle(MenuItem item) {
+                        showSerials();
+                    }
+                })
+                .on(R.id.nav_by_url, new NavigationViewHelper.NavigationViewHandler() {
+                    @Override
+                    public void handle(MenuItem item) {
+                        showLoadByUrl();
+                    }
+                });
 
         showLoadByUrl();
     }
 
-    private void showSerials()
-    {
+    private void showSerials() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.main_content, new SerialListFragment());
         ft.commit();
@@ -49,8 +63,7 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle(R.string.title_activity_serial_list);
     }
 
-    private void showLoadByUrl()
-    {
+    private void showLoadByUrl() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.main_content, LoadByUrlFragment.newInstance());
         ft.commit();
@@ -91,23 +104,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_by_url) {
-            showLoadByUrl();
-        }
-        if (id == R.id.nav_serials) {
-            showSerials();
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
-    @Override
     public void onLoadByUrlInteraction(String url) {
         Intent intent = new Intent(this, EpisodesActivity.class);
         intent.putExtra(Intent.EXTRA_SUBJECT, url);
@@ -117,6 +113,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onSerialClick(Serial serial) {
         Log.i("MainActivity", serial.toString());
-        Snackbar.make(findViewById(R.id.main_content), serial.toString(), Snackbar.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(this, SeasonsActivity.class);
+        intent.putExtra(SeasonsFragment.EXTRA_SERIAL, serial);
+        startActivity(intent);
     }
 }

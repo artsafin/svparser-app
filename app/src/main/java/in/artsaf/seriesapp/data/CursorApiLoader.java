@@ -1,10 +1,11 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data;
 
 import android.database.Cursor;
 
 import java.io.IOException;
 import java.util.List;
 
+import in.artsaf.seriesapp.data.api.SeriesApi;
 import in.artsaf.seriesapp.dto.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

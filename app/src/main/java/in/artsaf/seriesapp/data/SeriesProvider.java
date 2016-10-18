@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -6,6 +6,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+
+import in.artsaf.seriesapp.data.api.HttpSeriesApi;
 
 
 public class SeriesProvider extends ContentProvider {

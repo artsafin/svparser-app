@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp;
+package in.artsaf.seriesapp.fragment;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -15,22 +15,24 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import in.artsaf.seriesapp.R;
 import in.artsaf.seriesapp.dto.Serial;
 
-import static in.artsaf.seriesapp.api.SeriesProviderContract.*;
+import static in.artsaf.seriesapp.data.SeriesProviderContract.*;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class SerialListFragment extends Fragment implements AdapterView.OnItemClickListener {
-    interface SerialListFragmentHandler {
+    public interface SerialListFragmentHandler {
         void onSerialClick(Serial serial);
     }
 
     private SerialListFragmentHandler eventHandler;
     private SimpleCursorAdapter adapter;
 
-    LoaderManager.LoaderCallbacks<Cursor> loaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+    private static final int LOADER_ID = 0;
+    private LoaderManager.LoaderCallbacks<Cursor> loaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             return new CursorLoader(
@@ -54,25 +56,11 @@ public class SerialListFragment extends Fragment implements AdapterView.OnItemCl
         }
     };
 
-    public SerialListFragment() {
-    }
+    public SerialListFragment() {}
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        if (context instanceof SerialListFragmentHandler) {
-            eventHandler = (SerialListFragmentHandler) context;
-        } else {
-            throw new UnsupportedOperationException("Activity must implement " + SerialListFragmentHandler.class.getSimpleName());
-        }
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-//        setHasOptionsMenu(true);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         adapter = new SimpleCursorAdapter(
                 getActivity(),
@@ -82,12 +70,30 @@ public class SerialListFragment extends Fragment implements AdapterView.OnItemCl
                 new int[]{android.R.id.text1, android.R.id.text2},
                 0
         );
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof SerialListFragmentHandler) {
+            eventHandler = (SerialListFragmentHandler) context;
+        } else {
+            throw new RuntimeException(context.toString() + " must implement " + SerialListFragmentHandler.class.getSimpleName());
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+//        setHasOptionsMenu(true);
 
         ListView listView = (ListView) getView().findViewById(R.id.serial_list_listview);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
 
-        getLoaderManager().initLoader(0, null, loaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID, null, loaderCallbacks);
 
     }
 

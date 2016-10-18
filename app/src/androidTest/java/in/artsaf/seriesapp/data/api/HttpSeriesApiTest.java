@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data.api;
 
 import android.support.test.filters.SmallTest;
 import android.support.test.runner.AndroidJUnit4;
@@ -51,8 +51,8 @@ public class HttpSeriesApiTest {
         List<Season> list = api.seasons("Whatever");
 
         List<Season> expected = Arrays.asList(
-                new Season(12909, "Сериал Шерлок/Sherlock 4 сезон", "/serial-12909-SHerlok-4-sezon.html", "2016"),
-                new Season(8328, "Сериал Шерлок/Sherlock 3 сезон", "/serial-8328-SHerlok-3-sezon.html", "2016")
+                new Season(12909, 111, "Сериал Шерлок/Sherlock 4 сезон", "/serial-12909-SHerlok-4-sezon.html", "2016"),
+                new Season(8328, 111, "Сериал Шерлок/Sherlock 3 сезон", "/serial-8328-SHerlok-3-sezon.html", "2016")
         );
 
         assertEquals(expected, list);

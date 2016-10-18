@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -6,10 +6,11 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
 
+import in.artsaf.seriesapp.dto.Season;
 import in.artsaf.seriesapp.dto.Serial;
 
 public class SeriesProviderContract {
-    public static final String AUTHORITY = "in.artsaf.seriesapp.api.provider.serialapi";
+    public static final String AUTHORITY = "in.artsaf.seriesapp.data.api.provider.serialapi";
 
     private static final Uri baseUri = Uri.parse("content://" + AUTHORITY);
 
@@ -43,7 +44,11 @@ public class SeriesProviderContract {
             public static final String SORT_ORDER = NAME + " ASC";
 
             public static Serial toValueObject(Cursor cursor) {
-                return new Serial(cursor.getLong(0), cursor.getString(1), cursor.getString(2));
+                return new Serial(
+                        cursor.getLong(0),
+                        cursor.getString(1),
+                        cursor.getString(2)
+                );
             }
         }
     }
@@ -58,9 +63,25 @@ public class SeriesProviderContract {
         public static final String YEAR = "year";
         public static final String UPDATE_TS = "update_ts";
         public static final String _ID = "_id";
+        public static final String SERIAL_ID = "serial_id";
 
         public static Uri urlSeasonsBySerial(long id) {
             return ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id).build();
+        }
+
+        public static class ListProjection {
+            public static final String[] FIELDS = {_ID, SERIAL_ID, NAME, URL, YEAR};
+            public static final String SORT_ORDER = NAME + " ASC";
+
+            public static Season toValueObject(Cursor cursor) {
+                return new Season(
+                        cursor.getLong(0),
+                        cursor.getLong(1),
+                        cursor.getString(2),
+                        cursor.getString(3),
+                        cursor.getString(4)
+                );
+            }
         }
     }
 

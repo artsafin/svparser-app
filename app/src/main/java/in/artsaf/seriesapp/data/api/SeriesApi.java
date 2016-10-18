@@ -1,13 +1,12 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data.api;
 
 import android.net.Uri;
 
-import java.io.IOException;
 import java.util.List;
 
 import in.artsaf.seriesapp.dto.*;
 
-interface SeriesApi {
+public interface SeriesApi {
     public static class Contract {
         public static Uri serialsUrl(String baseUrl, String search) {
             Uri.Builder ub = Uri.parse(baseUrl).buildUpon().appendPath("serial");

@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data.api;
 
 import android.database.CursorIndexOutOfBoundsException;
 import android.support.test.filters.SmallTest;
@@ -9,6 +9,8 @@ import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.List;
+
+import in.artsaf.seriesapp.data.ListCursor;
 
 import static org.junit.Assert.*;
 

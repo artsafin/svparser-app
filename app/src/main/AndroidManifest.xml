@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -21,8 +21,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".EpisodesActivity"
-            android:parentActivityName=".MainActivity">
+            android:name=".activity.EpisodesActivity"
+            android:parentActivityName=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.SEND" />
@@ -35,11 +35,15 @@
         </activity>
 
         <provider
-            android:name=".api.SeriesProvider"
-            android:authorities="in.artsaf.seriesapp.api.provider.serialapi"
+            android:name=".data.SeriesProvider"
+            android:authorities="in.artsaf.seriesapp.data.api.provider.serialapi"
             android:exported="false" />
 
-        <activity android:name=".SeasonsActivity"></activity>
+        <activity
+            android:name=".activity.SeasonsActivity"
+            android:parentActivityName=".activity.MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

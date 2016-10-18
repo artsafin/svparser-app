@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp;
+package in.artsaf.seriesapp.data;
 
 import android.content.Context;
 import android.database.Cursor;

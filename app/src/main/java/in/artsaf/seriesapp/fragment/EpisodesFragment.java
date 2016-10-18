@@ -1,15 +1,12 @@
-package in.artsaf.seriesapp;
+package in.artsaf.seriesapp.fragment;
 
 
 import android.app.ProgressDialog;
-import android.content.ClipData;
-import android.content.ClipDescription;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,6 +20,7 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 
+import in.artsaf.seriesapp.R;
 import in.artsaf.seriesapp.seasonvar.LoadEpisodesTask;
 import in.artsaf.seriesapp.seasonvar.PlaylistItem;
 

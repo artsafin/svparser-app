@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data.api;
 
 import android.net.Uri;
 import android.util.Log;
@@ -20,7 +20,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-class HttpSeriesApi implements SeriesApi {
+public class HttpSeriesApi implements SeriesApi {
     protected interface RequestExecutor {
         Response execute(Request req) throws IOException;
     }
@@ -66,8 +66,11 @@ class HttpSeriesApi implements SeriesApi {
             Request req = defaultReq(Contract.seasonsUrl(BASE_URL, serialName)).build();
             Response resp = null;
             resp = executor.execute(req);
+            String body = resp.body().string();
 
-            return gson.fromJson(resp.body().string(), new TypeToken<ArrayList<Season>>() {}.getType());
+            Log.d(TAG, "seasons response: " + body);
+
+            return gson.fromJson(body, new TypeToken<ArrayList<Season>>() {}.getType());
         } catch (IOException e) {
             Log.e(TAG, "seasons IOException", e);
             e.printStackTrace();
@@ -84,9 +87,12 @@ class HttpSeriesApi implements SeriesApi {
                     .build();
             Response resp = null;
             resp = executor.execute(req);
+            String body = resp.body().string();
+
+            Log.d(TAG, "episodes response: " + body);
 
             Map<String, List<Episode>> map;
-            map = gson.fromJson(resp.body().string(), new TypeToken<Map<String, List<Episode>>>() {}.getType());
+            map = gson.fromJson(body, new TypeToken<Map<String, List<Episode>>>() {}.getType());
             return map.get("default");
         } catch (IOException e) {
             Log.e(TAG, "episodes IOException", e);

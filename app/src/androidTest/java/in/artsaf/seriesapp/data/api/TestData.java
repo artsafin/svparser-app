@@ -1,4 +1,4 @@
-package in.artsaf.seriesapp.api;
+package in.artsaf.seriesapp.data.api;
 
 public class TestData {
     public static final String serials = "[{\"name\":\"Скалолазка\",\"image\":\"http://cdn.seasonvar.ru/oblojka/12860.jpg\"},{\"name\":\"Лалола\",\"image\":\"http://cdn.seasonvar.ru/oblojka/1635.jpg\"}]";
