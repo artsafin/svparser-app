@@ -20,19 +20,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.EpisodesActivity"
-            android:parentActivityName=".activity.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.SEND" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="http" />
-            </intent-filter>
-        </activity>
 
         <provider
             android:name=".data.SeriesProvider"
@@ -44,6 +31,11 @@
             android:parentActivityName=".activity.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name=".activity.EpisodesActivity"
+            android:parentActivityName=".activity.SeasonsActivity">
+        </activity>
     </application>
 
 </manifest>

@@ -5,7 +5,9 @@ import android.content.ContentUris;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
+import in.artsaf.seriesapp.dto.Episode;
 import in.artsaf.seriesapp.dto.Season;
 import in.artsaf.seriesapp.dto.Serial;
 
@@ -90,8 +92,24 @@ public class SeriesProviderContract {
         static final int MATCHER_ID = 2;
         static final String MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH;
 
+        public static final String _ID = "id";
+        public static final String COMMENT = "comment";
+        public static final String FILE = "file";
+
         public static Uri urlEpisodesBySeason(long id) {
             return ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id).build();
+        }
+
+        public static class ListProjection {
+            public static final String[] FIELDS = {_ID, COMMENT, FILE};
+
+            public static Episode toValueObject(Cursor cursor) {
+                return new Episode(
+                        cursor.getLong(0),
+                        cursor.getString(1),
+                        cursor.getString(2)
+                );
+            }
         }
     }
 

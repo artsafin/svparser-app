@@ -2,11 +2,19 @@ package in.artsaf.seriesapp.fragment;
 
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -15,52 +23,97 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
 
 import in.artsaf.seriesapp.R;
-import in.artsaf.seriesapp.seasonvar.LoadEpisodesTask;
+import in.artsaf.seriesapp.data.CursorApiLoader;
+import in.artsaf.seriesapp.data.SeriesProviderContract;
+import in.artsaf.seriesapp.dto.Episode;
+import in.artsaf.seriesapp.dto.Season;
 import in.artsaf.seriesapp.seasonvar.PlaylistItem;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link EpisodesFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class EpisodesFragment extends Fragment implements LoadEpisodesTask.LoadEpisodesTaskHandler, AdapterView.OnItemClickListener {
-    public static final String ARG_URL = "url";
+public class EpisodesFragment extends Fragment implements AdapterView.OnItemClickListener {
+    public interface EpisodesFragmentHandler {
+        void onSingleEpisodeClick(Episode ep);
+//        void onMultiEpisodeClick(Episode ep);
+    }
 
-    private String url;
+    private static final String TAG = EpisodesFragment.class.getSimpleName();
+
+    public static final String EXTRA_SEASON = "season";
+
+    private Season season;
 
     private ProgressDialog progressDialog;
     private ListView listView;
 
-    private ArrayAdapter<PlaylistItem> adapter;
+    private EpisodesFragmentHandler eventHandler;
+    private SimpleCursorAdapter adapter;
+
+    private static final int LOADER_ID = 2;
+    private LoaderManager.LoaderCallbacks<Cursor> loaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(
+                    getActivity(),
+                    SeriesProviderContract.Episodes.urlEpisodesBySeason(season.id),
+                    SeriesProviderContract.Episodes.ListProjection.FIELDS,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            adapter.swapCursor(data);
+
+            if (progressDialog != null) {
+                progressDialog.hide();
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            adapter.swapCursor(null);
+
+            if (progressDialog != null) {
+                progressDialog.hide();
+            }
+        }
+    };
 
     public EpisodesFragment() {
         // Required empty public constructor
     }
 
-    public static EpisodesFragment newInstance(String url) {
+    public static EpisodesFragment newInstance(Season season) {
         EpisodesFragment fragment = new EpisodesFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_URL, url);
+        args.putSerializable(EXTRA_SEASON, season);
         fragment.setArguments(args);
         return fragment;
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof EpisodesFragmentHandler) {
+            eventHandler = (EpisodesFragmentHandler) context;
+        } else {
+            throw new RuntimeException(context.toString() + " must implement " + EpisodesFragmentHandler.class.getSimpleName());
+        }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
         if (getArguments() != null) {
-            url = getArguments().getString(ARG_URL);
-
-            progressDialog.show();
-
-            LoadEpisodesTask loadEpisodesTask = new LoadEpisodesTask(this);
-            loadEpisodesTask.execute(url);
+            season = (Season) getArguments().getSerializable(EXTRA_SEASON);
         }
     }
 
@@ -69,15 +122,11 @@ public class EpisodesFragment extends Fragment implements LoadEpisodesTask.LoadE
                              Bundle savedInstanceState) {
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Loading...");
+        progressDialog.setMessage(getString(R.string.loading));
         progressDialog.setCancelable(false);
+        progressDialog.show();
 
         View root =  inflater.inflate(R.layout.fragment_episodes, container, false);
-
-        adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1);
-        listView = (ListView) root.findViewById(R.id.listViewEpisodes);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(this);
 
         setHasOptionsMenu(false);
 
@@ -85,33 +134,37 @@ public class EpisodesFragment extends Fragment implements LoadEpisodesTask.LoadE
     }
 
     @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        adapter = new SimpleCursorAdapter(
+                getActivity(),
+                android.R.layout.simple_list_item_1,
+                null,
+                new String[]{SeriesProviderContract.Episodes.COMMENT},
+                new int[]{android.R.id.text1},
+                0
+        );
+
+        listView = (ListView) getView().findViewById(R.id.episodes_listview);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(this);
+
+        getLoaderManager().initLoader(LOADER_ID, null, loaderCallbacks);
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.episodes, menu);
+        inflater.inflate(R.menu.episodes_menu, menu);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        PlaylistItem item = (PlaylistItem) parent.getItemAtPosition(position);
+        Cursor c = (Cursor) parent.getItemAtPosition(position);
 
-        Intent intent = createViewIntent(item);
-        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivity(intent);
-        } else {
-            Snackbar.make(getView(), "No activity can open this file", Snackbar.LENGTH_SHORT);
-        }
-    }
+        Episode ep = SeriesProviderContract.Episodes.ListProjection.toValueObject(c);
 
-    private Intent createViewIntent(PlaylistItem item)
-    {
-        Uri uri = Uri.parse(item.file);
-        String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setDataAndType(uri, mimeType);
-
-        return intent;
+        eventHandler.onSingleEpisodeClick(ep);
     }
 
     @Override
@@ -144,13 +197,5 @@ public class EpisodesFragment extends Fragment implements LoadEpisodesTask.LoadE
         }
 
         return uris;
-    }
-
-    @Override
-    public void onEpisodesLoaded(ArrayList<PlaylistItem> playlistItems) {
-        progressDialog.hide();
-
-        adapter.clear();
-        adapter.addAll(playlistItems);
     }
 }

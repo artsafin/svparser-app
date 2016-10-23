@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import in.artsaf.seriesapp.R;
+import in.artsaf.seriesapp.fragment.EpisodesFragment;
 import in.artsaf.seriesapp.fragment.SeasonsFragment;
 import in.artsaf.seriesapp.dto.Season;
 import in.artsaf.seriesapp.dto.Serial;
@@ -58,6 +59,10 @@ public class SeasonsActivity extends AppCompatActivity
 
     @Override
     public void onSeasonClick(Season season) {
-        Log.i(TAG, season.toString());
+        Log.d(TAG, "onSeasonClick: url=" + season.getUrl() + " " + season.toString());
+
+        Intent intent = new Intent(this, EpisodesActivity.class);
+        intent.putExtra(EpisodesFragment.EXTRA_SEASON, season);
+        startActivity(intent);
     }
 }

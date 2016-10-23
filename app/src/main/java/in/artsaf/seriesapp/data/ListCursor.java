@@ -30,13 +30,12 @@ public class ListCursor extends MatrixCursor {
         }
     }
 
-    private <T> String[] getRow(T item) {
+    private <T> Object[] getRow(T item) {
         Field[] fields = item.getClass().getFields();
-        String[] row = new String[fields.length];
+        Object[] row = new Object[fields.length];
         for (int i = 0; i<fields.length; i++) {
             try {
-                Object value = fields[i].get(item);
-                row[i] = (value != null) ? value.toString() : null;
+                row[i] = fields[i].get(item);
             } catch (IllegalAccessException e) {
                 row[i] = null;
             }

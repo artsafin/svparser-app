@@ -57,8 +57,11 @@ public class CursorApiLoader {
         try {
             response = client.newCall(request).execute();
             String str = response.body().string();
-            List<Episode> episodes = api.episodes(str);
-            return new ListCursor(episodes, Episode.class);
+            Playlist playlist = api.episodes(str);
+            if (playlist != null) {
+                Playlist flat = normalizePlaylist(playlist, 2);
+                return new ListCursor(flat, Episode.class);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -68,5 +71,20 @@ public class CursorApiLoader {
         }
 
         return null;
+    }
+
+    private Playlist normalizePlaylist(Playlist pl, int depth) {
+        Playlist result = new Playlist();
+        long id = 1;
+
+        for (Episode ep: pl) {
+            if (!ep.isSingle() && depth >= 0) {
+                result.addAll(normalizePlaylist(ep.playlist, depth - 1));
+            } else if (ep.isSingle()) {
+                result.add(ep.normalize(id++));
+            }
+        }
+
+        return result;
     }
 }

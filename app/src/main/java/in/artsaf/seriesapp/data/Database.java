@@ -35,7 +35,6 @@ public class Database extends SQLiteOpenHelper {
     }
 
 
-
     @Override
     public void onCreate(SQLiteDatabase db) {
 
@@ -133,7 +132,7 @@ public class Database extends SQLiteOpenHelper {
                 return null;
             }
         } else {
-            Cursor c = getReadableDatabase().query(SERIALS_TABLE, projection, Serials.NAME + " like '%?%'", new String[]{search}, null, null, sortOrder);
+            Cursor c = getReadableDatabase().query(SERIALS_TABLE, projection, Serials.NAME + " like ?", new String[]{"%" + search + "%"}, null, null, sortOrder);
             if (c.getCount() > 0) {
                 return c;
             } else {
@@ -174,7 +173,7 @@ public class Database extends SQLiteOpenHelper {
 
     @Nullable
     private Cursor querySeasons(long serialId, String[] projection) {
-        Cursor c = getReadableDatabase().query(SEASONS_TABLE, projection, Seasons.SERIAL_ID + "=?", new String[] {String.valueOf(serialId)}, null, null, null);
+        Cursor c = getReadableDatabase().query(SEASONS_TABLE, projection, Seasons.SERIAL_ID + "=?", new String[]{String.valueOf(serialId)}, null, null, null);
         if (c.getCount() > 0) {
             return c;
         }

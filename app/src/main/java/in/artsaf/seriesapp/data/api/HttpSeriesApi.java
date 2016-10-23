@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import in.artsaf.seriesapp.dto.Episode;
+import in.artsaf.seriesapp.dto.Playlist;
 import in.artsaf.seriesapp.dto.Season;
 import in.artsaf.seriesapp.dto.Serial;
 import okhttp3.MediaType;
@@ -21,6 +23,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class HttpSeriesApi implements SeriesApi {
+
+    private static final String DEFAULT_TRANSLATION_KEY = "default";
+
     protected interface RequestExecutor {
         Response execute(Request req) throws IOException;
     }
@@ -79,7 +84,7 @@ public class HttpSeriesApi implements SeriesApi {
     }
 
     @Override
-    public List<Episode> episodes(String seasonHtml) {
+    public Playlist episodes(String seasonHtml) {
         try {
             Request req = defaultReq(Contract.episodesUrl(BASE_URL))
                     .header("Content-Type", "text/html; charset=utf-8")
@@ -91,9 +96,12 @@ public class HttpSeriesApi implements SeriesApi {
 
             Log.d(TAG, "episodes response: " + body);
 
-            Map<String, List<Episode>> map;
-            map = gson.fromJson(body, new TypeToken<Map<String, List<Episode>>>() {}.getType());
-            return map.get("default");
+            Map<String, Map<String, Playlist>> map;
+            map = gson.fromJson(body, new TypeToken<Map<String, Map<String, Playlist>>>() {}.getType());
+
+            return map.get(DEFAULT_TRANSLATION_KEY).get("playlist");
+        } catch (JsonSyntaxException exc) {
+
         } catch (IOException e) {
             Log.e(TAG, "episodes IOException", e);
             e.printStackTrace();

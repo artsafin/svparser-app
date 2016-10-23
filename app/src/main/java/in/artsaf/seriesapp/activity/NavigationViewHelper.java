@@ -33,14 +33,6 @@ public class NavigationViewHelper implements NavigationView.OnNavigationItemSele
                         intent.putExtra(MainActivity.EXTRA_SHOW_SERIALS, true);
                         context.startActivity(intent);
                     }
-                })
-                .on(R.id.nav_by_url, new NavigationViewHandler() {
-                    @Override
-                    public void handle(MenuItem item) {
-                        Intent intent = new Intent(context, MainActivity.class);
-                        intent.putExtra(MainActivity.EXTRA_SHOW_LOAD_BY_URL, true);
-                        context.startActivity(intent);
-                    }
                 });
 
         return h;

@@ -25,7 +25,7 @@ public interface SeriesApi {
 
         public static Uri episodesUrl(String baseUrl) {
             return Uri.parse(baseUrl).buildUpon()
-                    .appendPath("episodes/parse")
+                    .appendEncodedPath("episodes/parse")
                     .build();
         }
     }
@@ -34,5 +34,5 @@ public interface SeriesApi {
 
     List<Season> seasons(String serialName);
 
-    List<Episode> episodes(String seasonHtml);
+    Playlist episodes(String seasonHtml);
 }

@@ -41,7 +41,7 @@ public class SeasonsFragment extends Fragment implements AdapterView.OnItemClick
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             long serialId = args.getLong(EXTRA_SERIAL);
-            Log.i(TAG + "/loader", "Loading serialId " + String.valueOf(serialId));
+            Log.d(TAG, "LoaderCallbacks: Loading serialId " + String.valueOf(serialId));
             return new CursorLoader(
                     getActivity(),
                     Seasons.urlSeasonsBySerial(serialId),
@@ -77,7 +77,7 @@ public class SeasonsFragment extends Fragment implements AdapterView.OnItemClick
         if (getArguments() != null) {
             serial = (Serial) getArguments().getSerializable(EXTRA_SERIAL);
 
-            Log.i(TAG, "onCreate " + ((serial == null) ? "<null>" : serial.toString()));
+            Log.d(TAG, "onCreate: " + ((serial == null) ? "<null>" : serial.toString()));
         }
     }
 
@@ -104,7 +104,6 @@ public class SeasonsFragment extends Fragment implements AdapterView.OnItemClick
         listview.setAdapter(adapter);
         listview.setOnItemClickListener(this);
 
-        Log.i(TAG, "onActivityCreated " + String.valueOf(serial.id) + " " + adapter.toString());
         Bundle loaderArgs = new Bundle();
         loaderArgs.putLong(EXTRA_SERIAL, serial.id);
         getLoaderManager().initLoader(LOADER_ID, loaderArgs, loaderCallbacks);

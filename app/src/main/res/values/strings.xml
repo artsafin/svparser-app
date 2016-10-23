@@ -9,6 +9,7 @@
 
     <string name="title_activity_serial_list">TV Series</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="loading">Loading...</string>
+    <string name="no_video_activity">No activity can open this file</string>
+    <string name="search">Search</string>
 </resources>

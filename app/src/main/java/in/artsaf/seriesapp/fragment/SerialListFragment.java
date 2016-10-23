@@ -9,7 +9,12 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.widget.SearchView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -28,6 +33,9 @@ public class SerialListFragment extends Fragment implements AdapterView.OnItemCl
         void onSerialClick(Serial serial);
     }
 
+    private SearchView searchView;
+    private String search;
+
     private SerialListFragmentHandler eventHandler;
     private SimpleCursorAdapter adapter;
 
@@ -37,7 +45,7 @@ public class SerialListFragment extends Fragment implements AdapterView.OnItemCl
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             return new CursorLoader(
                     getActivity(),
-                    Serials.urlSerials(null),
+                    Serials.urlSerials(search),
                     Serials.ListProjection.FIELDS,
                     null,
                     null,
@@ -87,7 +95,7 @@ public class SerialListFragment extends Fragment implements AdapterView.OnItemCl
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-//        setHasOptionsMenu(true);
+        setHasOptionsMenu(true);
 
         ListView listView = (ListView) getView().findViewById(R.id.serial_list_listview);
         listView.setAdapter(adapter);
@@ -95,6 +103,49 @@ public class SerialListFragment extends Fragment implements AdapterView.OnItemCl
 
         getLoaderManager().initLoader(LOADER_ID, null, loaderCallbacks);
 
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        MenuItem item = menu.add(R.string.search);
+        item.setIcon(android.R.drawable.ic_menu_search);
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM
+                | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        searchView = new SearchView(getActivity());
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
+
+                if (search == null && newFilter == null) {
+                    return true;
+                }
+                if (search != null && search.equals(newFilter)) {
+                    return true;
+                }
+                search = newFilter;
+                getLoaderManager().restartLoader(LOADER_ID, null, loaderCallbacks);
+                return true;
+            }
+        });
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                if (!TextUtils.isEmpty(searchView.getQuery())) {
+                    searchView.setQuery(null, true);
+                }
+                return true;
+            }
+        });
+        searchView.setIconifiedByDefault(true);
+        item.setActionView(searchView);
     }
 
     @Override
