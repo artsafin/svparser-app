@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="in.artsaf.seriesapp">
+    package="com.artsafin.seriesapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -11,9 +11,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activity.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:name="com.artsafin.seriesapp.activity.MainActivity"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,19 +21,18 @@
         </activity>
 
         <provider
-            android:name=".data.SeriesProvider"
-            android:authorities="in.artsaf.seriesapp.data.api.provider.serialapi"
+            android:name="com.artsafin.seriesapp.data.SeriesProvider"
+            android:authorities="com.artsafin.seriesapp.data.api.provider.serialapi"
             android:exported="false" />
 
         <activity
-            android:name=".activity.SeasonsActivity"
-            android:parentActivityName=".activity.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:name="com.artsafin.seriesapp.activity.SeasonsActivity"
+            android:parentActivityName="com.artsafin.seriesapp.activity.MainActivity"
+            android:label="@string/app_name" />
 
         <activity
-            android:name=".activity.EpisodesActivity"
-            android:parentActivityName=".activity.SeasonsActivity">
+            android:name="com.artsafin.seriesapp.activity.EpisodesActivity"
+            android:parentActivityName="com.artsafin.seriesapp.activity.SeasonsActivity">
         </activity>
     </application>
 

@@ -1,4 +1,5 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <item name="ic_menu_slideshow" type="drawable">@android:drawable/ic_menu_slideshow</item>
     <item name="ic_menu_view" type="drawable">@android:drawable/ic_menu_search</item>
+    <item name="ic_menu_favorites" type="drawable">@android:drawable/ic_menu_recent_history</item>
 </resources>

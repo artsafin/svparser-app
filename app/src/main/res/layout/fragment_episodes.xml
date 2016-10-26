@@ -3,7 +3,7 @@
     android:id="@+id/episodes_listview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.EpisodesFragment"
+    tools:context="com.artsafin.seriesapp.fragment.EpisodesFragment"
     android:choiceMode="none"
     android:clickable="false" />
 

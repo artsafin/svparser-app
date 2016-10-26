@@ -5,6 +5,6 @@
     android:id="@+id/serial_list_listview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="in.artsaf.seriesapp.fragment.SerialListFragment">
+    tools:context="com.artsafin.seriesapp.fragment.SerialListFragment">
 
 </ListView>
