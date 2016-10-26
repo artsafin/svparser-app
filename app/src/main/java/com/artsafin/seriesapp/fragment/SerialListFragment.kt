@@ -30,15 +30,13 @@ import com.artsafin.seriesapp.data.contract.*
 class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     private val LOADER_ID = 0
 
-    interface SerialListFragmentHandler {
-        fun onSerialClick(serial: Serial)
-    }
+    var clickHandler: (serial: Serial) -> Unit = {}
 
     private var searchView: SearchView? = null
     private var search: String? = null
 
-    private var eventHandler: SerialListFragmentHandler? = null
-    private var adapter: SimpleCursorAdapter? = null
+    lateinit private var adapter: SimpleCursorAdapter
+
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
             return CursorLoader(
@@ -51,11 +49,36 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
         }
 
         override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-            adapter!!.swapCursor(data)
+            adapter.swapCursor(data)
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {
-            adapter!!.swapCursor(null)
+            adapter.swapCursor(null)
+        }
+    }
+
+    private val searchViewCallbacks = object: SearchView.OnQueryTextListener, SearchView.OnCloseListener {
+        override fun onClose(): Boolean {
+            if (!TextUtils.isEmpty(searchView?.query)) {
+                searchView?.setQuery(null, true)
+            }
+            return true
+        }
+
+        override fun onQueryTextSubmit(query: String) = true
+
+        override fun onQueryTextChange(newText: String): Boolean {
+            val newFilter = if (!TextUtils.isEmpty(newText)) newText else null
+
+            if (search == null && newFilter == null) {
+                return true
+            }
+            if (search != null && search == newFilter) {
+                return true
+            }
+            search = newFilter
+            loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
+            return true
         }
     }
 
@@ -66,19 +89,9 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
                 activity,
                 android.R.layout.simple_list_item_2,
                 null,
-                arrayOf<String>(Serials.NAME, Serials.IMAGE),
+                arrayOf(Serials.NAME, Serials.IMAGE),
                 intArrayOf(android.R.id.text1, android.R.id.text2),
                 0)
-    }
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-
-        if (context is SerialListFragmentHandler) {
-            eventHandler = context as SerialListFragmentHandler?
-        } else {
-            throw RuntimeException(context!!.toString() + " must implement " + SerialListFragmentHandler::class.java.simpleName)
-        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -86,7 +99,7 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
 
         setHasOptionsMenu(true)
 
-        val listView = view!!.findViewById(R.id.serial_list_listview) as ListView
+        val listView = view?.findViewById(R.id.serial_list_listview) as ListView
         listView.adapter = adapter
         listView.onItemClickListener = this
 
@@ -97,49 +110,29 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         super.onCreateOptionsMenu(menu, inflater)
 
-        val item = menu!!.add(R.string.search)
-        item.setIcon(android.R.drawable.ic_menu_search)
-        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
-        searchView = SearchView(activity)
-        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String): Boolean {
-                val newFilter = if (!TextUtils.isEmpty(newText)) newText else null
-
-                if (search == null && newFilter == null) {
-                    return true
-                }
-                if (search != null && search == newFilter) {
-                    return true
-                }
-                search = newFilter
-                loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
-                return true
-            }
-        })
-        searchView?.setOnCloseListener {
-            if (!TextUtils.isEmpty(searchView!!.query)) {
-                searchView!!.setQuery(null, true)
-            }
-            true
+        searchView = SearchView(activity).apply {
+            setOnQueryTextListener(searchViewCallbacks)
+            setOnCloseListener(searchViewCallbacks)
+            setIconifiedByDefault(true)
         }
-        searchView?.setIconifiedByDefault(true)
-        item.actionView = searchView
+
+        if (menu != null) {
+            val item = menu.add(R.string.search)
+            item.setIcon(android.R.drawable.ic_menu_search)
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
+            item.actionView = searchView
+        }
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return inflater!!.inflate(R.layout.fragment_serial_list, container, false)
-    }
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?)
+            = inflater?.inflate(R.layout.fragment_serial_list, container, false)
 
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val cursor = parent.getItemAtPosition(position) as Cursor?
+
         if (cursor != null) {
-            eventHandler?.onSerialClick(Serials.ListProjection.toValueObject(cursor))
+            clickHandler(Serials.ListProjection.toValueObject(cursor))
         }
     }
 }

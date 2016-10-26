@@ -25,9 +25,7 @@ import com.artsafin.seriesapp.dto.Episode
 import com.artsafin.seriesapp.dto.Season
 
 class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
-    interface EpisodesFragmentHandler {
-        fun onSingleEpisodeClick(ep: Episode)
-    }
+    var clickHandler: (ep: Episode) -> Unit = {}
 
     private val TAG = EpisodesFragment::class.java.simpleName
     private val LOADER_ID = 2
@@ -38,8 +36,8 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
     private var progressDialog: ProgressDialog? = null
     private var listView: ListView? = null
 
-    private var eventHandler: EpisodesFragmentHandler? = null
-    private var adapter: SimpleCursorAdapter? = null
+    lateinit private var adapter: SimpleCursorAdapter
+
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
             return CursorLoader(
@@ -52,29 +50,15 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
         }
 
         override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-            adapter!!.swapCursor(data)
+            adapter.swapCursor(data)
 
-            if (progressDialog != null) {
-                progressDialog?.dismiss()
-            }
+            progressDialog?.dismiss()
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {
-            adapter!!.swapCursor(null)
+            adapter.swapCursor(null)
 
-            if (progressDialog != null) {
-                progressDialog?.dismiss()
-            }
-        }
-    }
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-
-        if (context is EpisodesFragmentHandler) {
-            eventHandler = context as EpisodesFragmentHandler?
-        } else {
-            throw RuntimeException(context!!.toString() + " must implement " + EpisodesFragmentHandler::class.java.simpleName)
+            progressDialog?.dismiss()
         }
     }
 
@@ -84,6 +68,14 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
         if (arguments != null) {
             season = arguments.getSerializable(EXTRA_SEASON) as Season
         }
+
+        adapter = SimpleCursorAdapter(
+                activity,
+                android.R.layout.simple_list_item_1,
+                null,
+                arrayOf(Episodes.COMMENT),
+                intArrayOf(android.R.id.text1),
+                0)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
@@ -100,14 +92,6 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        adapter = SimpleCursorAdapter(
-                activity,
-                android.R.layout.simple_list_item_1,
-                null,
-                arrayOf<String>(Episodes.COMMENT),
-                intArrayOf(android.R.id.text1),
-                0)
-
         listView = view?.findViewById(R.id.episodes_listview) as ListView
         listView?.adapter = adapter
         listView?.onItemClickListener = this
@@ -115,16 +99,12 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
         loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater!!.inflate(R.menu.episodes_menu, menu)
-    }
-
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-        val c = parent.getItemAtPosition(position) as Cursor
+        val c = parent.getItemAtPosition(position) as Cursor?
 
-        val ep = Episodes.ListProjection.toValueObject(c)
-
-        eventHandler?.onSingleEpisodeClick(ep)
+        if (c != null) {
+            clickHandler(Episodes.ListProjection.toValueObject(c))
+        }
     }
 
     companion object {

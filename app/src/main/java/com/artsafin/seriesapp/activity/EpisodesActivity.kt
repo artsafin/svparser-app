@@ -2,23 +2,18 @@ package com.artsafin.seriesapp.activity
 
 import android.content.Intent
 import android.net.Uri
-import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v7.widget.Toolbar
+import android.support.v4.app.Fragment
+import android.util.Log
 import android.webkit.MimeTypeMap
 
 import com.artsafin.seriesapp.dto.Episode
 import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.fragment.EpisodesFragment
 import com.artsafin.seriesapp.R
-import com.artsafin.seriesapp.fragment.PlaylistFragment
 
-class EpisodesActivity : BaseActivity(MainActivity::class.java), EpisodesFragment.EpisodesFragmentHandler {
+class EpisodesActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,13 +42,17 @@ class EpisodesActivity : BaseActivity(MainActivity::class.java), EpisodesFragmen
         return intent
     }
 
-    override fun onSingleEpisodeClick(ep: Episode) {
-        val intent = createViewIntent(ep)
+    override fun onAttachFragment(fragment: Fragment?) {
+        super.onAttachFragment(fragment)
 
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-        } else {
-            Snackbar.make(findViewById(R.id.activity_episodes_content), R.string.no_video_activity, Snackbar.LENGTH_LONG)
+        (fragment as? EpisodesFragment)?.clickHandler = { ep ->
+            val intent = createViewIntent(ep)
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Snackbar.make(findViewById(R.id.activity_episodes_content), R.string.no_video_activity, Snackbar.LENGTH_LONG)
+            }
         }
     }
 }

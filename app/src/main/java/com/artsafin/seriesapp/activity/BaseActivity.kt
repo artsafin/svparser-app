@@ -1,9 +1,9 @@
 package com.artsafin.seriesapp.activity
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.NavigationView
+import android.support.v4.app.Fragment
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
@@ -13,7 +13,7 @@ import android.support.v7.widget.Toolbar
 import com.artsafin.seriesapp.R
 import com.artsafin.seriesapp.fragment.SerialListFragment
 
-open class BaseActivity(val intentClass: Class<out Context>?) : AppCompatActivity() {
+open class BaseActivity : AppCompatActivity() {
     val EXTRA_NAV_SERIALS = "nav_serials"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,12 +48,13 @@ open class BaseActivity(val intentClass: Class<out Context>?) : AppCompatActivit
     protected fun navigateSerials(): Boolean {
         title = getString(R.string.title_activity_serial_list)
 
-        if (intentClass == null) {
-            val ft = supportFragmentManager.beginTransaction()
-            ft.replace(R.id.activity_content, SerialListFragment())
-            ft.commit()
+        if (this is MainActivity) {
+            supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.activity_content, SerialListFragment())
+                    .commit()
         } else {
-            val intent = Intent(this, intentClass)
+            val intent = Intent(this, MainActivity::class.java)
             intent.putExtra(EXTRA_NAV_SERIALS, true)
             startActivity(intent)
         }

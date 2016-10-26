@@ -23,16 +23,14 @@ import com.artsafin.seriesapp.data.contract.*
 
 
 class SeasonsFragment : Fragment(), AdapterView.OnItemClickListener {
+    var clickHandler: (season: Season) -> Unit = {}
+
     private val TAG = SeasonsFragment::class.java.simpleName
     private val LOADER_ID = 1
 
-    interface SeasonsFragmentHandler {
-        fun onSeasonClick(season: Season)
-    }
-
     private var serial: Serial? = null
-    private var eventHandler: SeasonsFragmentHandler? = null
-    private var adapter: SimpleCursorAdapter? = null
+    lateinit private var adapter: SimpleCursorAdapter
+
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
             return CursorLoader(
@@ -45,11 +43,11 @@ class SeasonsFragment : Fragment(), AdapterView.OnItemClickListener {
         }
 
         override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-            adapter!!.swapCursor(data)
+            adapter.swapCursor(data)
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {
-            adapter!!.swapCursor(null)
+            adapter.swapCursor(null)
         }
     }
 
@@ -57,54 +55,36 @@ class SeasonsFragment : Fragment(), AdapterView.OnItemClickListener {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
             serial = arguments.getSerializable(EXTRA_SERIAL) as Serial
-
-            Log.d(TAG, "onCreate: " + if (serial == null) "<null>" else serial!!.toString())
         }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return inflater!!.inflate(R.layout.fragment_seasons, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
 
         adapter = SimpleCursorAdapter(
                 activity,
                 android.R.layout.simple_list_item_1,
                 null,
-                arrayOf<String>(Seasons.NAME),
+                arrayOf(Seasons.NAME),
                 intArrayOf(android.R.id.text1),
                 0)
+    }
 
-        val listview = view!!.findViewById(R.id.seasons_listview) as ListView
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        return inflater?.inflate(R.layout.fragment_seasons, container, false)
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        val listview = view?.findViewById(R.id.seasons_listview) as ListView
         listview.adapter = adapter
         listview.onItemClickListener = this
 
-        val loaderArgs = Bundle()
-        loaderArgs.putLong(EXTRA_SERIAL, serial!!.id)
-        loaderManager.initLoader(LOADER_ID, loaderArgs, loaderCallbacks)
-    }
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        if (context is SeasonsFragmentHandler) {
-            eventHandler = context as SeasonsFragmentHandler?
-        } else {
-            throw RuntimeException(context!!.toString() + " must implement " + SeasonsFragmentHandler::class.java.simpleName)
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        eventHandler = null
+        loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
     }
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val cursor = parent.getItemAtPosition(position) as Cursor?
         if (cursor != null) {
-            eventHandler?.onSeasonClick(Seasons.ListProjection.toValueObject(cursor))
+            clickHandler(Seasons.ListProjection.toValueObject(cursor))
         }
     }
 
