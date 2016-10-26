@@ -20,6 +20,7 @@ import android.widget.AdapterView
 import android.widget.ListView
 
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.adapter.SerialListCursorAdapter
 import com.artsafin.seriesapp.dto.Serial
 
 import com.artsafin.seriesapp.data.contract.*
@@ -85,6 +86,7 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        /*
         adapter = SimpleCursorAdapter(
                 activity,
                 android.R.layout.simple_list_item_2,
@@ -92,6 +94,8 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
                 arrayOf(Serials.NAME, Serials.IMAGE),
                 intArrayOf(android.R.id.text1, android.R.id.text2),
                 0)
+                */
+        adapter = SerialListCursorAdapter(activity)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
