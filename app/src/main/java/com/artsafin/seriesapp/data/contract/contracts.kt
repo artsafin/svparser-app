@@ -2,11 +2,14 @@ package com.artsafin.seriesapp.data.contract
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
+import com.artsafin.seriesapp.data.ListCursor
 
 import com.artsafin.seriesapp.dto.Episode
+import com.artsafin.seriesapp.dto.Playlist
 import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.dto.Serial
 
@@ -92,30 +95,67 @@ object Episodes {
     val _ID = "_id"
     val COMMENT = "comment"
     val FILE = "file"
+    val IS_WATCHED = "watched"
+
+    val WATCHED_TYPE_ID = 1
 
     fun urlEpisodesBySeason(id: Long): Uri {
         return ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id).build()
     }
 
     object ListProjection {
-        val FIELDS = arrayOf(_ID, COMMENT, FILE)
+        val FIELDS = arrayOf(_ID, COMMENT, FILE, IS_WATCHED)
 
         fun toValueObject(cursor: Cursor): Episode {
             return Episode(
                     cursor.getLong(0),
                     cursor.getString(1),
-                    cursor.getString(2))
+                    cursor.getString(2),
+                    cursor.getInt(3) > 0)
+        }
+
+        fun toCursor(episodes: Playlist): Cursor {
+            return ListCursor(episodes)
+                    .column(0, Episodes._ID, { _id })
+                    .column(1, Episodes.COMMENT, { comment })
+                    .column(2, Episodes.FILE, { file })
+                    .column(3, Episodes.IS_WATCHED, { if (isWatched) 1 else 0 })
         }
     }
 }
 
-object ContractMatcher {
-    private val matcher = UriMatcher(UriMatcher.NO_MATCH)
+object Watches {
+    val PATH = "watches"
+    val MATCHER_ID = 3
+    val MIME_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + PATH
 
-    init {
-        matcher.addURI(AUTHORITY, Serials.PATH, Serials.MATCHER_ID)
-        matcher.addURI(AUTHORITY, Seasons.PATH + "/#", Seasons.MATCHER_ID)
-        matcher.addURI(AUTHORITY, Episodes.PATH + "/#", Episodes.MATCHER_ID)
+    val _ID = "_id"
+    val TYPE_ID = "type_id"
+    val ITEM_ID = "item_id"
+    val UPDATE_TS = "update_ts"
+
+    fun newUrl(watchId: Long): Uri {
+        return baseUri.buildUpon()
+                .appendPath(PATH)
+                .appendEncodedPath(watchId.toString())
+                .build()
+    }
+
+    fun episodeWatchedInsert(itemId: Long): Pair<Uri, ContentValues> {
+        val values = ContentValues().apply {
+            put(TYPE_ID, Episodes.WATCHED_TYPE_ID)
+            put(ITEM_ID, itemId)
+        }
+        return Pair(baseUri.buildUpon().appendPath(PATH).build(), values)
+    }
+}
+
+object ContractMatcher {
+    private val matcher = UriMatcher(UriMatcher.NO_MATCH).apply {
+        addURI(AUTHORITY, Serials.PATH, Serials.MATCHER_ID)
+        addURI(AUTHORITY, Seasons.PATH + "/#", Seasons.MATCHER_ID)
+        addURI(AUTHORITY, Episodes.PATH + "/#", Episodes.MATCHER_ID)
+        addURI(AUTHORITY, Watches.PATH, Watches.MATCHER_ID)
     }
 
     fun matchUri(uri: Uri): Int {

@@ -50,8 +50,10 @@ class EpisodesActivity : BaseActivity() {
 
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
+                true
             } else {
-                Snackbar.make(findViewById(R.id.activity_episodes_content), R.string.no_video_activity, Snackbar.LENGTH_LONG)
+                Snackbar.make(findViewById(R.id.activity_content), R.string.no_video_activity, Snackbar.LENGTH_LONG)
+                false
             }
         }
     }

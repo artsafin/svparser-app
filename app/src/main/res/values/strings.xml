@@ -14,4 +14,5 @@
     <string name="no_video_activity">No activity can open this file</string>
     <string name="search">Search</string>
     <string name="menu_favorites">Favorites</string>
+    <string name="watched">Watched</string>
 </resources>

@@ -25,12 +25,14 @@ class ListCursor<T>(val data: List<T>) : AbstractCursor() {
         return names
     }
 
-    override fun getLong(column: Int) = columns[column]?.second?.invoke(getItem()) as Long
-    override fun getShort(column: Int) = columns[column]?.second?.invoke(getItem()) as Short
-    override fun getFloat(column: Int) = columns[column]?.second?.invoke(getItem()) as Float
-    override fun getDouble(column: Int) = columns[column]?.second?.invoke(getItem()) as Double
-    override fun getInt(column: Int) = columns[column]?.second?.invoke(getItem()) as Int
-    override fun getString(column: Int) = columns[column]?.second?.invoke(getItem()) as String?
+    private fun getNullableAny(column: Int) = columns[column]?.second?.invoke(getItem())
 
-    override fun isNull(column: Int) = columns[column]?.second?.invoke(getItem()) == null
+    override fun getLong(column: Int) = getNullableAny(column) as Long
+    override fun getShort(column: Int) = getNullableAny(column) as Short
+    override fun getFloat(column: Int) = getNullableAny(column) as Float
+    override fun getDouble(column: Int) = getNullableAny(column) as Double
+    override fun getInt(column: Int) = getNullableAny(column) as Int
+    override fun getString(column: Int) = getNullableAny(column) as String?
+
+    override fun isNull(column: Int) = getNullableAny(column) == null
 }

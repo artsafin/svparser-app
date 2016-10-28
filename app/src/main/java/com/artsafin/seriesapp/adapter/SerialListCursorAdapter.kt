@@ -11,7 +11,7 @@ import com.artsafin.seriesapp.R
 import com.artsafin.seriesapp.data.contract.Serials
 
 class SerialListCursorAdapter(context: Context)
-: SimpleCursorAdapter(context, R.layout.item_serial_list,
+: SimpleCursorAdapter(context, R.layout.item_serial,
                       null, Serials.ListProjection.FIELDS, null, 0) {
 
     private data class ViewTag(val image: NetworkImageView, val text: TextView)

@@ -2,41 +2,40 @@ package com.artsafin.seriesapp.fragment
 
 
 import android.app.ProgressDialog
-import android.content.Context
 import android.database.Cursor
+import android.database.DataSetObserver
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.LoaderManager
 import android.support.v4.content.CursorLoader
 import android.support.v4.content.Loader
-import android.support.v4.widget.SimpleCursorAdapter
+import android.util.Log
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ListView
+import android.widget.TextView
 
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.adapter.EpisodesAdapter
 
 import com.artsafin.seriesapp.data.contract.*
 import com.artsafin.seriesapp.dto.Episode
 import com.artsafin.seriesapp.dto.Season
 
 class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
-    var clickHandler: (ep: Episode) -> Unit = {}
+    var clickHandler: (ep: Episode) -> Boolean = { true }
 
     private val TAG = EpisodesFragment::class.java.simpleName
     private val LOADER_ID = 2
-
 
     private var season: Season? = null
 
     private var progressDialog: ProgressDialog? = null
     private var listView: ListView? = null
 
-    lateinit private var adapter: SimpleCursorAdapter
+    lateinit private var adapter: EpisodesAdapter
 
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
@@ -69,22 +68,17 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
             season = arguments.getSerializable(EXTRA_SEASON) as Season
         }
 
-        adapter = SimpleCursorAdapter(
-                activity,
-                android.R.layout.simple_list_item_1,
-                null,
-                arrayOf(Episodes.COMMENT),
-                intArrayOf(android.R.id.text1),
-                0)
+        adapter = EpisodesAdapter(activity)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        progressDialog = ProgressDialog(activity)
-        progressDialog?.isIndeterminate = true
-        progressDialog?.setMessage(getString(R.string.loading))
-        progressDialog?.setCancelable(false)
-        progressDialog?.show()
+        progressDialog = ProgressDialog(activity).apply() {
+            isIndeterminate = true
+            setMessage(getString(R.string.loading))
+            setCancelable(false)
+            show()
+        }
 
         return inflater?.inflate(R.layout.fragment_episodes, container, false)
     }
@@ -103,7 +97,18 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
         val c = parent.getItemAtPosition(position) as Cursor?
 
         if (c != null) {
-            clickHandler(Episodes.ListProjection.toValueObject(c))
+            val ep = Episodes.ListProjection.toValueObject(c)
+
+            if (clickHandler(ep)) {
+                val (uri, values) = Watches.episodeWatchedInsert(ep._id)
+
+                Log.d(TAG, "onItemClick: insert before: $uri, values: $values")
+                val newUri = activity.contentResolver.insert(uri, values)
+                Log.d(TAG, "onItemClick: insert: $newUri")
+
+                ep.isWatched = true
+                adapter.refreshItem(view as TextView, ep)
+            }
         }
     }
 

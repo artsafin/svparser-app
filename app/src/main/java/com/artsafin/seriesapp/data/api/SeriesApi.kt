@@ -27,5 +27,5 @@ interface SeriesApi {
 
     fun seasons(serialName: String): List<Season>?
 
-    fun episodes(seasonHtml: String): Playlist?
+    fun episodes(season: Season, seasonHtml: String): Playlist?
 }

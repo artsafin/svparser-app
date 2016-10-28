@@ -27,6 +27,15 @@ open class HttpSeriesApi : SeriesApi {
     private val TAG = HttpSeriesApi::class.java.simpleName
     private val BASE_URL = "http://138.68.84.5/api"
 
+    private class IdGenerator(val season: Season, startValue: Int = 1) {
+        private val MAX_EPISODES = 10000000
+
+        @Volatile private var next: Int = startValue
+
+        @Synchronized fun next() : Long {
+            return season.id * MAX_EPISODES + next++
+        }
+    }
 
     protected interface RequestExecutor {
         @Throws(IOException::class)
@@ -77,7 +86,7 @@ open class HttpSeriesApi : SeriesApi {
         return null
     }
 
-    override fun episodes(seasonHtml: String): Playlist? {
+    override fun episodes(season: Season, seasonHtml: String): Playlist? {
         try {
             val requestBody = RequestBody.create(MediaType.parse("text/html; charset=utf-8"), seasonHtml)
             val req = defaultReq(SeriesApi.Contract.episodesUrl(BASE_URL))
@@ -89,14 +98,10 @@ open class HttpSeriesApi : SeriesApi {
 
             Log.d(TAG, "episodes response: " + body)
 
-//            val map = gson.fromJson<Map<String, Map<String, ArrayList<Episode>>>>(body,
-//                 object : TypeToken<Map<String, Map<String, ArrayList<Episode>>>>() {}.type)
-
             val map = gson.fromJson<JsonObject>(body, JsonObject::class.java)
             if (map.has(DEFAULT_TRANSLATION_KEY)) {
-                val flat = parseJson(json = map.getAsJsonObject(DEFAULT_TRANSLATION_KEY),
-                                     nextId = 1,
-                                     depth = 2)
+                val flat = hydrateJson(id = IdGenerator(season),
+                                       json = map.getAsJsonObject(DEFAULT_TRANSLATION_KEY))
 
                 return flat
             }
@@ -110,9 +115,8 @@ open class HttpSeriesApi : SeriesApi {
         return null
     }
 
-    private fun parseJson(json: JsonObject, nextId: Long, depth: Int): Playlist {
+    private fun hydrateJson(id: IdGenerator, json: JsonObject, depth: Int = 2): Playlist {
         val result = Playlist()
-        var id: Long = nextId
 
         if (!json.has("playlist")) {
             return result
@@ -125,14 +129,12 @@ open class HttpSeriesApi : SeriesApi {
                 continue
             }
             if (elem.has("playlist") && depth >= 0) {
-                val subItems = parseJson(elem, id, depth - 1)
+                val subItems = hydrateJson(id, elem, depth - 1)
                 result.addAll(subItems)
-                id += subItems.size
             }
             if (elem.has("file")) {
                 val file = elem.get("file").asString ?: ""
-                result.add(Episode(id, elem.get("comment").asString ?: file, file))
-                id++
+                result.add(Episode(id.next(), elem.get("comment").asString ?: file, file))
             }
         }
 

@@ -37,13 +37,11 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
         try {
             response = client.newCall(request).execute()
             val str = response.body().string()
-            val playlist = api.episodes(str)
+            val playlist = api.episodes(s, str)
+
             if (playlist != null) {
-//                val flat = normalizePlaylist(playlist, 2)
-                return ListCursor(playlist)
-                        .column(0, Episodes._ID, { _id })
-                        .column(1, Episodes.COMMENT, { comment })
-                        .column(2, Episodes.FILE, { file })
+                cache.updateWatched(playlist, Episode::setWatched)
+                return Episodes.ListProjection.toCursor(playlist)
             }
         } catch (e: IOException) {
             e.printStackTrace()
@@ -55,19 +53,4 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
 
         return null
     }
-/*
-    private fun normalizePlaylist(pl: Playlist, depth: Int): Playlist {
-        val result = Playlist()
-        var id: Long = 1
-
-        for (ep in pl) {
-            if (!ep.isSingle && depth >= 0) {
-                result.addAll(normalizePlaylist(ep.playlist ?: Playlist(), depth - 1))
-            } else if (ep.isSingle) {
-                result.add(ep.normalize(id++))
-            }
-        }
-
-        return result
-    }*/
 }

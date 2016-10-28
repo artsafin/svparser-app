@@ -36,7 +36,7 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     private var searchView: SearchView? = null
     private var search: String? = null
 
-    lateinit private var adapter: SimpleCursorAdapter
+    lateinit private var adapter: SerialListCursorAdapter
 
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
@@ -86,15 +86,6 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        /*
-        adapter = SimpleCursorAdapter(
-                activity,
-                android.R.layout.simple_list_item_2,
-                null,
-                arrayOf(Serials.NAME, Serials.IMAGE),
-                intArrayOf(android.R.id.text1, android.R.id.text2),
-                0)
-                */
         adapter = SerialListCursorAdapter(activity)
     }
 
