@@ -1,19 +1,17 @@
 package com.artsafin.seriesapp.activity
 
 import android.content.Intent
+import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.app.NavUtils
 import android.util.Log
 
 import com.artsafin.seriesapp.R
 import com.artsafin.seriesapp.fragment.EpisodesFragment
-import com.artsafin.seriesapp.fragment.SeasonsFragment
-import com.artsafin.seriesapp.dto.Season
-import com.artsafin.seriesapp.dto.Serial
+import com.artsafin.seriesapp.fragment.FavoritesFragment
+import com.artsafin.seriesapp.fragment.SerialListFragment
 
-class SeasonsActivity : BaseActivity() {
-    private val TAG = SeasonsActivity::class.java.simpleName
+class FavoritesActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,25 +22,26 @@ class SeasonsActivity : BaseActivity() {
         }
 
         if (savedInstanceState == null) {
-            val serial = viewState.serial ?: throw RuntimeException("Serial must be passed in intent to ${javaClass.simpleName}")
-            val fragment = SeasonsFragment.newInstance(serial)
+            val fragment = FavoritesFragment.newInstance()
             supportFragmentManager
                     .beginTransaction()
                     .replace(R.id.activity_content, fragment)
                     .commit()
-
-            title = serial.name
         }
+
+        title = getString(R.string.favorites)
     }
 
     override fun onAttachFragment(fragment: Fragment?) {
         super.onAttachFragment(fragment)
 
-        (fragment as? SeasonsFragment)?.clickHandler = { season ->
-            Log.d(TAG, "onSeasonClick: url=" + season.fullUrl + " " + season.toString())
+        (fragment as? FavoritesFragment)?.clickHandler = { serial ->
+            Log.i(javaClass.simpleName, serial.toString())
 
-            startActivity(Intent(this, EpisodesActivity::class.java)
-                                  .with(viewState.append(season)))
+            val intent = Intent(this, SeasonsActivity::class.java)
+                    .with(viewState.append(serial))
+
+            startActivity(intent)
         }
     }
 }

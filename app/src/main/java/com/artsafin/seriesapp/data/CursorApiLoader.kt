@@ -19,7 +19,12 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
     private val playlistCache = LruCache<Long, Playlist>(1)
 
     fun serials(search: String?, selArgs: SelectionArgs): Cursor {
-        return cache.serials(search, selArgs, { api.serials(search) ?: listOf() })
+        if (search == null && (selArgs.selection?.length ?: 0) > 0) {
+            Log.d(TAG, "serials: fetching from cache")
+            return cache.serials(null, selArgs, null)
+        } else {
+            return cache.serials(search, selArgs, { api.serials(search) ?: listOf() })
+        }
     }
 
     fun seasons(serialId: Long, selArgs: SelectionArgs): Cursor {

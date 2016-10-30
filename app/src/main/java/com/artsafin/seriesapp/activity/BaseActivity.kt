@@ -12,16 +12,18 @@ import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.data.contract.Serials
+import com.artsafin.seriesapp.dto.Serial
 import com.artsafin.seriesapp.fragment.SerialListFragment
 
 open class BaseActivity : AppCompatActivity() {
     private val TAG = BaseActivity::class.java.simpleName
     lateinit protected var toolbar: Toolbar
-
-    val EXTRA_NAV_SERIALS = "nav_serials"
+    lateinit protected var viewState: Viewstate
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,10 +52,43 @@ open class BaseActivity : AppCompatActivity() {
 
             result
         }
+
+        viewState = intent?.getViewstate() ?: Viewstate()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (viewState.serial != null) {
+            menuInflater.inflate(R.menu.serial, menu)
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        viewState.serial?.run {
+            menu?.findItem(R.id.menu_serial_add_favorite)?.isVisible = !flags.favorite
+            menu?.findItem(R.id.menu_serial_remove_favorite)?.isVisible = flags.favorite
+        }
+
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    private fun markSerialFavorite(serial: Serial, fav: Boolean) {
+        with (Serials.Fav.updateQuery(serial, fav)) {
+            if (contentResolver.update(url, values, where, whereArgs) > 0) {
+                serial.favorite = fav
+                GlobalViewstate.serial.dirty()
+            }
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?) = when (item?.itemId) {
+        R.id.menu_serial_add_favorite -> viewState.serial?.run { markSerialFavorite(this, true); true } ?: false
+        R.id.menu_serial_remove_favorite -> viewState.serial?.run { markSerialFavorite(this, false); true } ?: false
+        else -> false
     }
 
     protected fun navigateSerials(): Boolean {
-        title = getString(R.string.title_activity_serial_list)
+        title = getString(R.string.tv_series)
 
         if (this is MainActivity) {
             supportFragmentManager
@@ -61,8 +96,7 @@ open class BaseActivity : AppCompatActivity() {
                     .replace(R.id.activity_content, SerialListFragment())
                     .commit()
         } else {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra(EXTRA_NAV_SERIALS, true)
+            val intent = Intent(this, MainActivity::class.java).with(viewState)
             startActivity(intent)
         }
 
@@ -70,7 +104,8 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     protected fun navigateFavorites(): Boolean {
-        title = getString(R.string.title_activity_favorites)
+        val intent = Intent(this, FavoritesActivity::class.java).with(viewState)
+        startActivity(intent)
 
         return true
     }

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
 
-import com.artsafin.seriesapp.fragment.SeasonsFragment
 import com.artsafin.seriesapp.fragment.SerialListFragment
 
 class MainActivity : BaseActivity() {
@@ -23,7 +22,8 @@ class MainActivity : BaseActivity() {
             Log.i("onSerialClick: ", serial.toString())
 
             val intent = Intent(this, SeasonsActivity::class.java)
-            intent.putExtra(SeasonsFragment.EXTRA_SERIAL, serial)
+                            .with(viewState.append(serial))
+
             startActivity(intent)
         }
     }

@@ -8,11 +8,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.LoaderManager
 import android.support.v4.content.CursorLoader
 import android.support.v4.content.Loader
-import android.support.v7.app.AppCompatActivity
 import android.view.*
 import android.widget.AdapterView
-import android.widget.ListView
-import android.widget.TextView
 
 import com.artsafin.seriesapp.R
 import com.artsafin.seriesapp.adapter.EpisodesAdapter
@@ -24,14 +21,14 @@ import android.support.v7.view.ActionMode
 import android.util.Log
 import com.artsafin.seriesapp.util.*
 
-class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
+class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
 
     var clickHandler: (ep: Episode) -> Boolean = { true }
 
     private val TAG = EpisodesFragment::class.java.simpleName
     private val LOADER_ID = 2
 
-    private var season: Season? = null
+    lateinit private var season: Season
 
     private var progressDialog: ProgressDialog? = null
     private var listView: MultiChoiceListView? = null
@@ -43,7 +40,7 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
             Log.d(TAG, "onCreateLoader: season=$season")
 
             val fetchCached = args?.getBoolean("cached") ?: false
-            val url = Episodes.urlEpisodesBySeason(season?.id ?: -1, fetchCached)
+            val url = Episodes.urlEpisodesBySeason(season.id, fetchCached)
 
             return CursorLoader(
                     activity,
@@ -97,6 +94,8 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
 
         if (arguments != null) {
             season = arguments.getSerializable(EXTRA_SEASON) as Season
+        } else {
+            throw RuntimeException("Argument EXTRA_SEASON must be passed to ${javaClass.simpleName}")
         }
 
         adapter = EpisodesAdapter(activity)
@@ -185,25 +184,14 @@ class EpisodesFragment : Fragment(), AdapterView.OnItemClickListener {
         }
 
         if (watched) {
-            val (uri, values) = Watches.insertManyQuery(items.keys.map { it._id }.toSet())
+            val (uri, values) = Watches.insertManyQuery(season.id, items.keys.map { it._id }.toSet())
             activity.contentResolver.bulkInsert(uri, values)
         } else {
             val (uri, where, whereArgs) = Watches.deleteManyQuery(items.keys.map { it._id }.toSet())
             activity.contentResolver.delete(uri, where, whereArgs)
         }
 
-        // Refresh locally
-//        adapter.refreshItems(items.keys.toSet())
-
-        /*
-        for ((ep, view) in items) {
-            ep.isWatched = watched
-            if (view != null) {
-                adapter.refreshItem(ep, view as TextView)
-            }
-        }*/
-
-        // Refresh from cursor
+        // Refresh from cached cursor
         val args = Bundle().apply { putBoolean("cached", true) }
         loaderManager.restartLoader(LOADER_ID, args, loaderCallbacks)
     }

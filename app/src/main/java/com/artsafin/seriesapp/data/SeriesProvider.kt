@@ -26,6 +26,7 @@ class SeriesProvider : ContentProvider() {
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
         val selArgs = SelectionArgs(projection, selection, selectionArgs, sortOrder)
+        Log.d(TAG, "query: $selArgs")
         return when (ContractMatcher.matchUri(uri)) {
             Serials.MATCHER_ID -> api.serials(uri.getQueryParameter("search"), selArgs)
             Seasons.MATCHER_ID -> api.seasons(ContentUris.parseId(uri), selArgs)
@@ -43,21 +44,11 @@ class SeriesProvider : ContentProvider() {
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
-        if (ContractMatcher.matchUri(uri) != Watches.MATCHER_ID) {
-            throw UnsupportedOperationException("This url is read only: " + uri.toString())
-        }
-        if (values == null) {
-            throw UnsupportedOperationException("Cannot insert null")
+        if (ContractMatcher.matchUri(uri) == Watches.MATCHER_ID) {
+            return insertWatches(values)
         }
 
-        val typeId = values.getAsLong(Watches.TYPE_ID) ?: throw UnsupportedOperationException("Cannot insert null: typeId")
-        val itemId = values.getAsLong(Watches.ITEM_ID) ?: throw UnsupportedOperationException("Cannot insert null: itemId")
-
-        Log.d(TAG, "provider $uri: insert: $itemId")
-
-        val id = db.insertWatch(typeId, itemId)
-
-        return Watches.newUrl(id)
+        throw UnsupportedOperationException("This url is read only: " + uri.toString())
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
@@ -70,10 +61,34 @@ class SeriesProvider : ContentProvider() {
 
         Log.d(TAG, "provider $uri: bulk delete: ${selectionArgs.joinToString(",")}")
 
-        return db.bulkRemoveWatch(selection, selectionArgs)
+        return db.deleteWatch(selection, selectionArgs)
     }
 
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?): Int {
-        throw UnsupportedOperationException("Serial API provider is read only")
+        if (ContractMatcher.matchUri(uri) != Serials.MATCHER_ID) {
+            throw UnsupportedOperationException("This url is read only: " + uri.toString())
+        }
+
+        values ?: throw UnsupportedOperationException("Arguments must be specified for update operation: values")
+        selection ?: throw UnsupportedOperationException("Arguments must be specified for update operation: selection")
+        selectionArgs ?: throw UnsupportedOperationException("Arguments must be specified for update operation: selectionArgs")
+
+        return db.updateSerials(values, selection, selectionArgs)
+    }
+
+    private fun insertWatches(values: ContentValues?): Uri? {
+        if (values == null) {
+            throw UnsupportedOperationException("Cannot insert null")
+        }
+
+        values.getAsLong(Watches.TYPE_ID) ?: throw UnsupportedOperationException("Cannot insert null: TYPE_ID")
+        values.getAsLong(Watches.ITEM_ID) ?: throw UnsupportedOperationException("Cannot insert null: ITEM_ID")
+        values.getAsLong(Watches.SEASON_ID) ?: throw UnsupportedOperationException("Cannot insert null: SEASON_ID")
+
+        Log.d(TAG, "insertWatches: $values")
+
+        val id = db.insertWatch(values)
+
+        return Watches.newUrl(id)
     }
 }

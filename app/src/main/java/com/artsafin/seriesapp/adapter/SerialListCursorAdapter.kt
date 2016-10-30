@@ -35,6 +35,12 @@ class SerialListCursorAdapter(context: Context)
         with (view.tag as ViewTag) {
             image.setImageUrl(serial.image, VolleyLoader.getImageLoader(context))
             text.text = serial.name
+
+            if (serial.favorite) {
+                text.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_fav_on, 0)
+            } else {
+                text.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ import java.util.*
 class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, null, Database.DB_VERSION) {
 
     private companion object ConstructorConstants {
-        private val DB_VERSION = 3
+        private val DB_VERSION = 4
         private val DB_NAME = "seriesapp.db"
     }
 
@@ -41,6 +41,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
                 ${Serials.IMG} TEXT,
                 ${Serials.ORIGINAL_NAME} TEXT,
                 ${Serials.NUM_SEASONS} TEXT,
+                ${Serials.FAVORITE} INTEGER DEFAULT 0,
                 ${Serials.UPDATE_TS} TEXT)
         """)
 
@@ -59,6 +60,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
                 ${Watches._ID} INTEGER PRIMARY KEY,
                 ${Watches.TYPE_ID} INTEGER,
                 ${Watches.ITEM_ID} INTEGER,
+                ${Watches.SEASON_ID} INTEGER,
                 ${Watches.UPDATE_TS} TEXT)
         """)
 
@@ -84,7 +86,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
 
         if (c.moveToNext()) {
             val s = Serials.ListProjection.toValueObject(c)
-            Log.d(TAG, "findSerialById: found record: " + s.toString())
+            Log.d(TAG, "findSerialById: found record: $s")
             return s
         }
 
@@ -99,28 +101,36 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
 
         if (c.moveToNext()) {
             val s = Seasons.ListProjection.toValueObject(c)
-            Log.d(TAG, "findSeasonById: found record: " + s.toString())
+            Log.d(TAG, "findSeasonById: found record: $s")
             return s
         }
 
         return null
     }
 
-    fun serials(search: String?, selArgs: SelectionArgs, loader: () -> List<Serial>): Cursor {
+    fun serials(search: String?, selArgs: SelectionArgs, loader: (() -> List<Serial>)?): Cursor {
         val c = querySerials(search, selArgs)
-        if (c.count == 0) {
-            Log.d(TAG, "serials: fetch from api, search=" + search)
+        if (loader != null && c.count == 0) {
+            Log.d(TAG, "serials: fetch from api, search=$search")
             loadAndInsertSerials(loader)
             return querySerials(search, selArgs)
         } else {
-            Log.d(TAG, "serials: found in db, search=" + search)
+            Log.d(TAG, "serials: found in db, search=$search")
             return c
         }
     }
 
     private fun querySerials(search: String?, selArgs: SelectionArgs): Cursor {
-        val selection = if (search == null || search.length == 0) null else Serials.NAME + " like ?"
-        val selectionArgs = if (search == null || search.length == 0) null else arrayOf("%$search%")
+        var selection = if (search == null || search.length == 0) "1" else Serials.NAME + " like ?"
+        var selectionArgs = if (search == null || search.length == 0) arrayOf() else arrayOf("%$search%")
+
+        if (selArgs.selection != null) {
+            selection = "($selection) AND (${selArgs.selection})"
+
+            if (selArgs.selectionArgs != null) {
+                selectionArgs += selArgs.selectionArgs
+            }
+        }
 
         return readableDatabase.query(SERIALS_TABLE, selArgs.projection, selection, selectionArgs, null, null, selArgs.sortOrder)
     }
@@ -147,11 +157,11 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
     fun seasons(serialId: Long, selArgs: SelectionArgs, loader: () -> List<Season>): Cursor {
         val c = querySeasons(serialId, selArgs)
         if (c.count == 0) {
-            Log.d(TAG, "seasons: fetching from api id=" + serialId.toString())
+            Log.d(TAG, "seasons: fetching from api id=$serialId")
             loadAndInsertSeasons(serialId, loader)
             return querySeasons(serialId, selArgs)
         } else {
-            Log.d(TAG, "seasons: found in db id=" + serialId.toString())
+            Log.d(TAG, "seasons: found in db id=$serialId")
             return c
         }
     }
@@ -213,21 +223,27 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
         }
     }
 
-    fun insertWatch(typeId: Long, itemId: Long): Long {
+    fun insertWatch(values: ContentValues): Long {
         val db = writableDatabase
 
-        val values = ContentValues().apply {
-            put(Watches.ITEM_ID, itemId)
-            put(Watches.TYPE_ID, typeId)
+        val insertValues = values.apply {
             put(Watches.UPDATE_TS, SimpleDateFormat.getInstance().format(Date()))
         }
 
-        return db.insert(WATCHES_TABLE, null, values)
+        return db.insert(WATCHES_TABLE, null, insertValues)
     }
 
-    fun bulkRemoveWatch(selection: String, selectionArgs: Array<String>): Int {
+    fun deleteWatch(selection: String, selectionArgs: Array<String>): Int {
         val db = writableDatabase
 
         return db.delete(WATCHES_TABLE, selection, selectionArgs)
+    }
+
+    fun updateSerials(values: ContentValues, selection: String, selectionArgs: Array<String>): Int {
+        val db = writableDatabase
+
+        Log.d(TAG, "updateSerials: $values, ${selectionArgs.joinToString(",")}")
+
+        return db.update(SERIALS_TABLE, values, selection, selectionArgs)
     }
 }

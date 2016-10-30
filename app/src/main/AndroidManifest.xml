@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.artsafin.seriesapp">
+          package="com.artsafin.seriesapp">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -10,38 +10,42 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <provider
-            android:name="com.artsafin.seriesapp.data.SeriesProvider"
+            android:name=".data.SeriesProvider"
             android:authorities="com.artsafin.seriesapp.data.api.provider.serialapi"
-            android:exported="false" />
+            android:exported="false"/>
 
         <activity
-            android:name="com.artsafin.seriesapp.activity.MainActivity"
+            android:name=".activity.MainActivity"
             android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
         <activity
-            android:name="com.artsafin.seriesapp.activity.SeasonsActivity"
-            android:parentActivityName="com.artsafin.seriesapp.activity.MainActivity"
-            android:label="@string/app_name">
+            android:name=".activity.SeasonsActivity"
+            android:label="@string/app_name"
+            android:parentActivityName=".activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.artsafin.seriesapp.activity.MainActivity" />
+                android:value="com.artsafin.seriesapp.activity.MainActivity"/>
         </activity>
-
         <activity
-            android:name="com.artsafin.seriesapp.activity.EpisodesActivity"
-            android:parentActivityName="com.artsafin.seriesapp.activity.SeasonsActivity">
-
+            android:name=".activity.EpisodesActivity"
+            android:parentActivityName=".activity.SeasonsActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.artsafin.seriesapp.activity.SeasonsActivity" />
+                android:value="com.artsafin.seriesapp.activity.SeasonsActivity"/>
+        </activity>
+        <activity
+            android:label="@string/favorites"
+            android:name=".activity.FavoritesActivity"
+            android:parentActivityName=".activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.artsafin.seriesapp.activity.MainActivity"/>
         </activity>
     </application>
 

@@ -16,13 +16,14 @@ import android.widget.AdapterView
 import android.widget.ListView
 
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.activity.GlobalViewstate
 import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.dto.Serial
 
 import com.artsafin.seriesapp.data.contract.*
 
 
-class SeasonsFragment : Fragment(), AdapterView.OnItemClickListener {
+class SeasonsFragment: Fragment(), AdapterView.OnItemClickListener {
     var clickHandler: (season: Season) -> Unit = {}
 
     private val TAG = SeasonsFragment::class.java.simpleName
@@ -55,6 +56,8 @@ class SeasonsFragment : Fragment(), AdapterView.OnItemClickListener {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
             serial = arguments.getSerializable(EXTRA_SERIAL) as Serial
+        } else {
+            throw RuntimeException("Argument EXTRA_SERIAL must be passed to ${javaClass.simpleName}")
         }
 
         adapter = SimpleCursorAdapter(
@@ -88,12 +91,20 @@ class SeasonsFragment : Fragment(), AdapterView.OnItemClickListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (GlobalViewstate.season.isDirty) {
+            loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
+        }
+    }
+
     companion object {
         val EXTRA_SERIAL = "serial"
 
-        fun newInstance(args: Bundle): SeasonsFragment {
+        fun newInstance(serial: Serial): SeasonsFragment {
             val fragment = SeasonsFragment()
-            fragment.arguments = args
+            fragment.arguments = Bundle().apply { putSerializable(EXTRA_SERIAL, serial) }
             return fragment
         }
     }

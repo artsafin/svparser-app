@@ -15,5 +15,8 @@
     <TextView
         android:id="@+id/item_serial_list_text"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:drawableEnd="@android:drawable/star_on"
+        android:drawableRight="@android:drawable/star_on"
+        />
 </LinearLayout>

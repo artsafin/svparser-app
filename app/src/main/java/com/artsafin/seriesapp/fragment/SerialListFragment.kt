@@ -2,6 +2,7 @@ package com.artsafin.seriesapp.fragment
 
 import android.content.Context
 import android.database.Cursor
+import android.net.Uri
 import android.support.v4.app.Fragment
 import android.os.Bundle
 import android.support.v4.app.LoaderManager
@@ -10,6 +11,7 @@ import android.support.v4.content.Loader
 import android.support.v4.widget.SimpleCursorAdapter
 import android.support.v7.widget.SearchView
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -20,6 +22,8 @@ import android.widget.AdapterView
 import android.widget.ListView
 
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.activity.GlobalViewstate
+import com.artsafin.seriesapp.activity.Viewstate
 import com.artsafin.seriesapp.adapter.SerialListCursorAdapter
 import com.artsafin.seriesapp.dto.Serial
 
@@ -28,8 +32,8 @@ import com.artsafin.seriesapp.data.contract.*
 /**
  * A placeholder fragment containing a simple view.
  */
-class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
-    private val LOADER_ID = 0
+open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
+    open protected val LOADER_ID = 0
 
     var clickHandler: (serial: Serial) -> Unit = {}
 
@@ -38,16 +42,16 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
 
     lateinit private var adapter: SerialListCursorAdapter
 
+    open protected fun getLoader() = CursorLoader(
+            activity,
+            Serials.fetchUrl(search),
+            Serials.ListProjection.FIELDS,
+            null,
+            null,
+            Serials.ListProjection.SORT_ORDER)
+
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
-        override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-            return CursorLoader(
-                    activity,
-                    Serials.urlSerials(search),
-                    Serials.ListProjection.FIELDS,
-                    null,
-                    null,
-                    Serials.ListProjection.SORT_ORDER)
-        }
+        override fun onCreateLoader(id: Int, args: Bundle?) = getLoader()
 
         override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
             adapter.swapCursor(data)
@@ -122,6 +126,13 @@ class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?)
             = inflater?.inflate(R.layout.fragment_serial_list, container, false)
 
+    override fun onResume() {
+        super.onResume()
+
+        if (GlobalViewstate.serial.isDirty) {
+            loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
+        }
+    }
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val cursor = parent.getItemAtPosition(position) as Cursor?

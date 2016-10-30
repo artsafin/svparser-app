@@ -14,6 +14,8 @@ import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.dto.Serial
 import java.util.*
 
+data class UpdateArgs(val url: Uri, val values: ContentValues, val where: String, val whereArgs: Array<String>)
+
 // non-private for tests
 val AUTHORITY = "com.artsafin.seriesapp.data.api.provider.serialapi"
 
@@ -21,12 +23,15 @@ private val baseUri = Uri.parse("content://" + AUTHORITY)
 
 object Serials {
     val PATH = "serials"
+
     val MATCHER_ID = 0
     val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
 
+    val FAVORITE = "favorite"
     val NAME = "name"
     val IMAGE = "image"
     val _ID = "_id"
+
     val DESCRIPTION = "description"
     val GENRES = "genres"
     val IMG = "img"
@@ -34,7 +39,7 @@ object Serials {
     val NUM_SEASONS = "num_seasons"
     val UPDATE_TS = "update_ts"
 
-    fun urlSerials(search: String?): Uri {
+    fun fetchUrl(search: String?): Uri {
         val builder = baseUri.buildUpon().appendPath(PATH)
 
         if (search != null) {
@@ -44,15 +49,28 @@ object Serials {
         return builder.build()
     }
 
+    object Fav {
+        fun updateQuery(serial: Serial, favorite: Boolean): UpdateArgs {
+            val values = ContentValues().apply {
+                put(FAVORITE, if (favorite) 1 else 0)
+            }
+            return UpdateArgs(baseUri.buildUpon().appendPath(PATH).build(), values, "$_ID = ?", arrayOf(serial.id.toString()))
+        }
+
+        val where: String? = "$FAVORITE = ?"
+        fun whereArgs(favorite: Boolean): Array<String> = if (favorite) arrayOf("1") else arrayOf("0")
+    }
+
     object ListProjection {
-        val FIELDS = arrayOf(_ID, NAME, IMAGE)
+        val FIELDS = arrayOf(_ID, NAME, IMAGE, FAVORITE)
         val SORT_ORDER = NAME + " ASC"
 
         fun toValueObject(cursor: Cursor): Serial {
             return Serial(
                     cursor.getLong(0),
                     cursor.getString(1),
-                    cursor.getString(2))
+                    cursor.getString(2),
+                    Serial.Flags(favorite = cursor.getInt(3) > 0))
         }
     }
 }
@@ -139,6 +157,7 @@ object Watches {
     val _ID = "_id"
     val TYPE_ID = "type_id"
     val ITEM_ID = "item_id"
+    val SEASON_ID = "season_id"
     val UPDATE_TS = "update_ts"
 
     fun newUrl(watchId: Long): Uri {
@@ -148,20 +167,12 @@ object Watches {
                 .build()
     }
 
-    /*
-    fun insertOneQuery(ep: Episode): Pair<Uri, ContentValues> {
-        val values = ContentValues().apply {
-            put(TYPE_ID, Episodes.WATCHED_TYPE_ID)
-            put(ITEM_ID, ep._id)
-        }
-        return Pair(baseUri.buildUpon().appendPath(PATH).build(), values)
-    }*/
-
-    fun insertManyQuery(eps: Set<Long>): Pair<Uri, Array<ContentValues>> {
+    fun insertManyQuery(seasonId: Long, eps: Set<Long>): Pair<Uri, Array<ContentValues>> {
         val values = eps.map {
             ContentValues().apply {
                 put(TYPE_ID, Episodes.WATCHED_TYPE_ID)
                 put(ITEM_ID, it)
+                put(SEASON_ID, seasonId)
             }
         }
         return Pair(baseUri.buildUpon().appendPath(PATH).build(), values.toTypedArray())

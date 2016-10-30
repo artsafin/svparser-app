@@ -16,14 +16,14 @@ class SeriesProviderContractTest {
 
     @Test
     fun serialsNullSearch() {
-        val uri = Serials.urlSerials(null)
+        val uri = Serials.fetchUrl(null)
 
         assertEquals("content://$AUTHORITY/serials", uri.toString())
     }
 
     @Test
     fun serialsNonNullSearch() {
-        val uri = Serials.urlSerials("hello world 123")
+        val uri = Serials.fetchUrl("hello world 123")
 
         assertEquals("content://$AUTHORITY/serials?search=hello%20world%20123", uri.toString())
     }

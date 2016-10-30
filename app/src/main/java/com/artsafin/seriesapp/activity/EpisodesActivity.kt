@@ -25,15 +25,14 @@ class EpisodesActivity : BaseActivity() {
             finish()
         }
 
-        if (savedInstanceState == null && intent != null && intent.hasExtra(EpisodesFragment.EXTRA_SEASON)) {
-            val s = intent.getSerializableExtra(EpisodesFragment.EXTRA_SEASON) as Season
-            title = s.name
-            val fragment = EpisodesFragment.newInstance(s)
-
+        if (savedInstanceState == null) {
+            val season = viewState.season ?: throw RuntimeException("Season must be passed in intent to ${javaClass.simpleName}")
+            val fragment = EpisodesFragment.newInstance(season)
             supportFragmentManager
                     .beginTransaction()
                     .replace(R.id.activity_content, fragment)
                     .commit()
+            title = season.name
         }
     }
 
