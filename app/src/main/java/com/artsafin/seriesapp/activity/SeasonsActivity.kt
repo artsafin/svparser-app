@@ -3,6 +3,7 @@ package com.artsafin.seriesapp.activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.app.NavUtils
 import android.util.Log
 
 import com.artsafin.seriesapp.R
@@ -16,6 +17,11 @@ class SeasonsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         if (savedInstanceState == null && intent != null) {
             val fragment = SeasonsFragment.newInstance(intent.extras)

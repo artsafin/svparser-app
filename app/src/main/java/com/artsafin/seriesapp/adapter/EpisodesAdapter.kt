@@ -1,20 +1,22 @@
 package com.artsafin.seriesapp.adapter
 
 import android.content.Context
+import android.database.CrossProcessCursorWrapper
 import android.database.Cursor
 import android.support.v4.widget.SimpleCursorAdapter
 import android.view.View
 import android.widget.TextView
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.data.ListCursor
 import com.artsafin.seriesapp.data.contract.Episodes
 import com.artsafin.seriesapp.dto.Episode
 
 class EpisodesAdapter(context: Context)
     : SimpleCursorAdapter(context, R.layout.item_episode, null, Episodes.ListProjection.FIELDS, null, 0) {
 
-    data class ViewTag(val textField: TextView)
+    private data class ViewTag(val textField: TextView)
 
-    fun refreshItem(view: TextView, ep: Episode) {
+    fun refreshItem(ep: Episode, view: TextView) {
         view.text = ep.comment
 
         if (ep.isWatched) {
@@ -35,6 +37,6 @@ class EpisodesAdapter(context: Context)
 
         val episode = Episodes.ListProjection.toValueObject(cursor)
 
-        refreshItem((view.tag as ViewTag).textField, episode)
+        refreshItem(episode, (view.tag as ViewTag).textField)
     }
 }

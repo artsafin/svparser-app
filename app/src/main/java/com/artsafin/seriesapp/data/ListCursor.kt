@@ -1,11 +1,8 @@
 package com.artsafin.seriesapp.data
 
 import android.database.AbstractCursor
-import android.database.MatrixCursor
 
-import java.lang.reflect.Field
-
-class ListCursor<T>(val data: List<T>) : AbstractCursor() {
+class ListCursor<T>(private val data: List<T>) : AbstractCursor() {
     private var columns = mutableMapOf<Int, Pair<String, T.() -> Any?>>()
 
     fun column(index: Int, name: String, valueFn: T.() -> Any?): ListCursor<T> {
@@ -14,9 +11,7 @@ class ListCursor<T>(val data: List<T>) : AbstractCursor() {
         return this
     }
 
-    private fun getItem(): T {
-        return data[position]
-    }
+    private fun getItem() = data[position]
 
     override fun getCount() = data.size
 

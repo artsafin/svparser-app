@@ -184,7 +184,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
         }
     }
 
-    fun updateWatched(playlist: Playlist, cb: (Episode) -> Unit) {
+    fun updateWatched(playlist: Playlist, cb: (Episode, Boolean) -> Unit) {
         val db = readableDatabase
 
         val binds = Array(playlist.size + 1, { "" })
@@ -209,9 +209,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
         }
 
         for (ep in playlist) {
-            if (watchedSet.contains(ep._id)) {
-                cb(ep)
-            }
+            cb(ep, watchedSet.contains(ep._id))
         }
     }
 
@@ -225,5 +223,11 @@ class Database(context: Context) : SQLiteOpenHelper(context, Database.DB_NAME, n
         }
 
         return db.insert(WATCHES_TABLE, null, values)
+    }
+
+    fun bulkRemoveWatch(selection: String, selectionArgs: Array<String>): Int {
+        val db = writableDatabase
+
+        return db.delete(WATCHES_TABLE, selection, selectionArgs)
     }
 }

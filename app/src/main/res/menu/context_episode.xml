@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_context_episode_select_all" android:title="@android:string/selectAll" android:icon="?attr/actionModeSelectAllDrawable" />
+    <item android:id="@+id/menu_context_episode_toggle" android:title="@string/toggle_watched" android:icon="@android:drawable/ic_menu_view" />
+    <item android:id="@+id/menu_context_episode_watch_above" android:title="@string/mark_above_watched" android:icon="@android:drawable/arrow_up_float" />
+    <item android:id="@+id/menu_context_episode_unwatch_below" android:title="@string/mark_below_not_watched" android:icon="@android:drawable/arrow_down_float" />
+</menu>

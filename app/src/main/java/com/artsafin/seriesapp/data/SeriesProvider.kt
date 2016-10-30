@@ -5,12 +5,15 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
+import android.util.Log
 import com.artsafin.seriesapp.data.contract.*
 
 import com.artsafin.seriesapp.data.api.HttpSeriesApi
 
 
 class SeriesProvider : ContentProvider() {
+    private val TAG = SeriesProvider::class.java.simpleName
+
     lateinit private var api: CursorApiLoader
     lateinit private var db: Database
 
@@ -26,7 +29,7 @@ class SeriesProvider : ContentProvider() {
         return when (ContractMatcher.matchUri(uri)) {
             Serials.MATCHER_ID -> api.serials(uri.getQueryParameter("search"), selArgs)
             Seasons.MATCHER_ID -> api.seasons(ContentUris.parseId(uri), selArgs)
-            Episodes.MATCHER_ID -> api.episodes(ContentUris.parseId(uri))
+            Episodes.MATCHER_ID -> api.episodes(ContentUris.parseId(uri), uri.getBooleanQueryParameter("cached", false))
             else -> null
         }
     }
@@ -50,13 +53,24 @@ class SeriesProvider : ContentProvider() {
         val typeId = values.getAsLong(Watches.TYPE_ID) ?: throw UnsupportedOperationException("Cannot insert null: typeId")
         val itemId = values.getAsLong(Watches.ITEM_ID) ?: throw UnsupportedOperationException("Cannot insert null: itemId")
 
+        Log.d(TAG, "provider $uri: insert: $itemId")
+
         val id = db.insertWatch(typeId, itemId)
 
         return Watches.newUrl(id)
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-        throw UnsupportedOperationException("Serial API provider is read only")
+        if (ContractMatcher.matchUri(uri) != Watches.MATCHER_ID) {
+            throw UnsupportedOperationException("This url is read only: " + uri.toString())
+        }
+
+        selection ?: throw UnsupportedOperationException("Arguments must be specified for delete operation: selection")
+        selectionArgs ?: throw UnsupportedOperationException("Arguments must be specified for delete operation: selectionArgs")
+
+        Log.d(TAG, "provider $uri: bulk delete: ${selectionArgs.joinToString(",")}")
+
+        return db.bulkRemoveWatch(selection, selectionArgs)
     }
 
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?): Int {

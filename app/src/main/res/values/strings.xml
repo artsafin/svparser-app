@@ -15,4 +15,9 @@
     <string name="search">Search</string>
     <string name="menu_favorites">Favorites</string>
     <string name="watched">Watched</string>
+    <string name="toggle_watched">Toggle watched</string>
+    <string name="mark_above_watched">Mark above watched</string>
+    <string name="mark_below_not_watched">Mark below not watched</string>
+
+    <string name="items_selected">%d items selected</string>
 </resources>

@@ -5,6 +5,8 @@ import android.net.Uri
 import android.support.design.widget.Snackbar
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.app.NavUtils
+import android.support.v7.view.ActionMode
 import android.util.Log
 import android.webkit.MimeTypeMap
 
@@ -17,6 +19,11 @@ class EpisodesActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         if (savedInstanceState == null && intent != null && intent.hasExtra(EpisodesFragment.EXTRA_SEASON)) {
             val s = intent.getSerializableExtra(EpisodesFragment.EXTRA_SEASON) as Season

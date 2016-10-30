@@ -5,7 +5,7 @@ data class Episode(val _id: Long, var comment: String, val file: String, var isW
         comment = comment.replace("<br>", "\n")
     }
 
-    fun setWatched() {
-        isWatched = true
+    fun updateWatched(flag: Boolean) {
+        isWatched = flag
     }
 }

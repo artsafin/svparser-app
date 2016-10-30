@@ -9,6 +9,8 @@
         <item name="android:itemTextAppearance">@android:style/TextAppearance</item>
         <item name="itemTextColor">?android:attr/textColorPrimary</item>
         <item name="itemIconTint">?android:attr/textColorPrimary</item>
+
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
 </resources>

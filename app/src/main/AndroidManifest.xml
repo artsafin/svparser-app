@@ -10,6 +10,12 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <provider
+            android:name="com.artsafin.seriesapp.data.SeriesProvider"
+            android:authorities="com.artsafin.seriesapp.data.api.provider.serialapi"
+            android:exported="false" />
+
         <activity
             android:name="com.artsafin.seriesapp.activity.MainActivity"
             android:label="@string/app_name">
@@ -20,19 +26,22 @@
             </intent-filter>
         </activity>
 
-        <provider
-            android:name="com.artsafin.seriesapp.data.SeriesProvider"
-            android:authorities="com.artsafin.seriesapp.data.api.provider.serialapi"
-            android:exported="false" />
-
         <activity
             android:name="com.artsafin.seriesapp.activity.SeasonsActivity"
             android:parentActivityName="com.artsafin.seriesapp.activity.MainActivity"
-            android:label="@string/app_name" />
+            android:label="@string/app_name">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.artsafin.seriesapp.activity.MainActivity" />
+        </activity>
 
         <activity
             android:name="com.artsafin.seriesapp.activity.EpisodesActivity"
             android:parentActivityName="com.artsafin.seriesapp.activity.SeasonsActivity">
+
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.artsafin.seriesapp.activity.SeasonsActivity" />
         </activity>
     </application>
 

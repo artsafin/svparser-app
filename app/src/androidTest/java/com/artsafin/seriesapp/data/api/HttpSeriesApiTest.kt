@@ -64,11 +64,11 @@ class HttpSeriesApiTest {
         val api = TestHttpSeriesApi(Response.Builder(),
                                     TestData.episodesOne)
 
-        val list = api.episodes("Whatever")
+        val list = api.episodes(Season(0, 0, "Season name", "Season url", "Season year"), "Whatever")
 
         val expected = Arrays.asList(
                 Episode(1, "0 серия SD/HD<br>BaibaKo",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e00.White.Christmas.HDTV720p.Rus.Eng.BaibaKo.tv.a1.25.11.15.mp4"))
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e00.White.Christmas.HDTV720p.Rus.Eng.BaibaKo.tv.a1.25.11.15.mp4", false))
 
         assertEquals(expected, list)
 
@@ -80,7 +80,7 @@ class HttpSeriesApiTest {
         val api = TestHttpSeriesApi(Response.Builder(),
                                     TestData.episodesMany)
 
-        val list = api.episodes("Whatever")
+        val list = api.episodes(Season(0, 0, "Season name", "Season url", "Season year"), "Whatever")
 
         val expected = Arrays.asList(
                 Episode(1, "1 серия SD/HD<br>Hamster",

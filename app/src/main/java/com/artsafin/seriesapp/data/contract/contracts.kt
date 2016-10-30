@@ -12,6 +12,7 @@ import com.artsafin.seriesapp.dto.Episode
 import com.artsafin.seriesapp.dto.Playlist
 import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.dto.Serial
+import java.util.*
 
 // non-private for tests
 val AUTHORITY = "com.artsafin.seriesapp.data.api.provider.serialapi"
@@ -99,8 +100,14 @@ object Episodes {
 
     val WATCHED_TYPE_ID = 1
 
-    fun urlEpisodesBySeason(id: Long): Uri {
-        return ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id).build()
+    fun urlEpisodesBySeason(id: Long, fetchCached: Boolean = false): Uri {
+        val builder = ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id)
+
+        if (fetchCached) {
+            builder.appendQueryParameter("cached", "1")
+        }
+
+        return builder.build()
     }
 
     object ListProjection {
@@ -141,12 +148,31 @@ object Watches {
                 .build()
     }
 
-    fun episodeWatchedInsert(itemId: Long): Pair<Uri, ContentValues> {
+    /*
+    fun insertOneQuery(ep: Episode): Pair<Uri, ContentValues> {
         val values = ContentValues().apply {
             put(TYPE_ID, Episodes.WATCHED_TYPE_ID)
-            put(ITEM_ID, itemId)
+            put(ITEM_ID, ep._id)
         }
         return Pair(baseUri.buildUpon().appendPath(PATH).build(), values)
+    }*/
+
+    fun insertManyQuery(eps: Set<Long>): Pair<Uri, Array<ContentValues>> {
+        val values = eps.map {
+            ContentValues().apply {
+                put(TYPE_ID, Episodes.WATCHED_TYPE_ID)
+                put(ITEM_ID, it)
+            }
+        }
+        return Pair(baseUri.buildUpon().appendPath(PATH).build(), values.toTypedArray())
+    }
+
+    fun deleteManyQuery(eps: Set<Long>): Triple<Uri, String?, Array<String>?> {
+        val where = "$TYPE_ID = ? AND $ITEM_ID IN (${Array(eps.size, { "?" }).joinToString(",")})"
+        val args = arrayListOf(Episodes.WATCHED_TYPE_ID.toString())
+        args.addAll(eps.map(Long::toString))
+
+        return Triple(baseUri.buildUpon().appendPath(PATH).build(), where, args.toTypedArray())
     }
 }
 

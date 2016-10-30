@@ -1,6 +1,8 @@
 package com.artsafin.seriesapp.data
 
 import android.database.Cursor
+import android.support.v4.util.LruCache
+import android.util.Log
 
 import java.io.IOException
 
@@ -14,6 +16,7 @@ import okhttp3.Response
 class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
 
     private val TAG = CursorApiLoader::class.java.simpleName
+    private val playlistCache = LruCache<Long, Playlist>(1)
 
     fun serials(search: String?, selArgs: SelectionArgs): Cursor {
         return cache.serials(search, selArgs, { api.serials(search) ?: listOf() })
@@ -26,7 +29,7 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
         })
     }
 
-    fun episodes(seasonId: Long): Cursor? {
+    private fun loadPlaylist(seasonId: Long): Playlist? {
         val s = cache.findSeasonById(seasonId) ?: return null
 
         val client = OkHttpClient()
@@ -39,10 +42,7 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
             val str = response.body().string()
             val playlist = api.episodes(s, str)
 
-            if (playlist != null) {
-                cache.updateWatched(playlist, Episode::setWatched)
-                return Episodes.ListProjection.toCursor(playlist)
-            }
+            return playlist
         } catch (e: IOException) {
             e.printStackTrace()
         } finally {
@@ -50,7 +50,21 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
                 response.close()
             }
         }
-
         return null
+    }
+
+    fun episodes(seasonId: Long, cached: Boolean): Cursor? {
+        val playlist = if (cached) {
+            Log.d(TAG, "episodes: fetching cached!")
+            playlistCache.get(seasonId) ?: loadPlaylist(seasonId) ?: return null
+        } else {
+            Log.d(TAG, "episodes: fetching from db")
+            loadPlaylist(seasonId) ?: return null
+        }
+
+        playlistCache.put(seasonId, playlist)
+
+        cache.updateWatched(playlist, Episode::updateWatched)
+        return Episodes.ListProjection.toCursor(playlist)
     }
 }
