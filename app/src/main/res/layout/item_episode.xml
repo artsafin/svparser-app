@@ -9,7 +9,7 @@
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:text="test"
-    android:textColor="@color/item_episode_fg"
+    android:background="@drawable/item_episode_bg"
     android:textAppearance="?android:attr/textAppearanceListItemSmall"
     android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
     android:paddingStart="?android:attr/listPreferredItemPaddingStart"
