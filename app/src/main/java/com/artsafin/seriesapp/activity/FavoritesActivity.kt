@@ -27,9 +27,9 @@ class FavoritesActivity : BaseActivity() {
                     .beginTransaction()
                     .replace(R.id.activity_content, fragment)
                     .commit()
-        }
 
-        title = getString(R.string.favorites)
+            title = getString(R.string.favorites)
+        }
     }
 
     override fun onAttachFragment(fragment: Fragment?) {

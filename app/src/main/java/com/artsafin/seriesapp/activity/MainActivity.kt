@@ -12,7 +12,9 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        navigateSerials()
+        if (savedInstanceState == null) {
+            navigateSerials()
+        }
     }
 
     override fun onAttachFragment(fragment: Fragment?) {

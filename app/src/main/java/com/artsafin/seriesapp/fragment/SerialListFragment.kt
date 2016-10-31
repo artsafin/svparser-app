@@ -5,6 +5,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.support.v4.app.Fragment
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v4.app.LoaderManager
 import android.support.v4.content.CursorLoader
 import android.support.v4.content.Loader
@@ -33,6 +34,8 @@ import com.artsafin.seriesapp.data.contract.*
  * A placeholder fragment containing a simple view.
  */
 open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
+    private val STATE_LIST = "state_scroll_y"
+
     open protected val LOADER_ID = 0
 
     var clickHandler: (serial: Serial) -> Unit = {}
@@ -40,6 +43,7 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     private var searchView: SearchView? = null
     private var search: String? = null
 
+    lateinit private var listView: ListView
     lateinit private var adapter: SerialListCursorAdapter
 
     open protected fun getLoader() = CursorLoader(
@@ -93,18 +97,28 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
         adapter = SerialListCursorAdapter(activity)
     }
 
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?)
+            = inflater?.inflate(R.layout.fragment_serial_list, container, false)
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
         setHasOptionsMenu(true)
 
-        val listView = view?.findViewById(R.id.serial_list_listview) as ListView
+        listView = view?.findViewById(R.id.serial_list_listview) as ListView
         listView.adapter = adapter
         listView.onItemClickListener = this
         listView.emptyView = activity.findViewById(R.id.activity_progress)
 
         loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
+    }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (GlobalViewstate.serial.isDirty) {
+            loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -121,17 +135,6 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
             item.setIcon(android.R.drawable.ic_menu_search)
             item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
             item.actionView = searchView
-        }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?)
-            = inflater?.inflate(R.layout.fragment_serial_list, container, false)
-
-    override fun onResume() {
-        super.onResume()
-
-        if (GlobalViewstate.serial.isDirty) {
-            loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
         }
     }
 
