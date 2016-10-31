@@ -1,6 +1,6 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <item name="ic_menu_slideshow" type="drawable">@android:drawable/ic_menu_slideshow</item>
-    <item name="ic_menu_view" type="drawable">@android:drawable/ic_menu_search</item>
+    <item name="ic_tvseries" type="drawable">@drawable/ic_subscriptions</item>
     <item name="ic_fav_on" type="drawable">@drawable/ic_star_on</item>
     <item name="ic_fav_off" type="drawable">@drawable/ic_star_off</item>
+    <item name="ic_watched" type="drawable">@drawable/ic_eye</item>
 </resources>

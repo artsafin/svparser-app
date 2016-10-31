@@ -20,7 +20,7 @@ class EpisodesAdapter(context: Context)
         view.text = ep.comment
 
         if (ep.isWatched) {
-            view.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_menu_view, 0)
+            view.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_watched, 0)
         } else {
             view.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
         }

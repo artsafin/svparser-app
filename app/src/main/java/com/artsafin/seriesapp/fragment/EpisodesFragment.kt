@@ -30,7 +30,7 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
 
     lateinit private var season: Season
 
-    private var progressDialog: ProgressDialog? = null
+//    private var progressDialog: ProgressDialog? = null
     private var listView: MultiChoiceListView? = null
 
     lateinit private var adapter: EpisodesAdapter
@@ -55,14 +55,14 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
             Log.d(TAG, "onLoadFinished: count=${data.count}")
             adapter.swapCursor(data)
 
-            progressDialog?.dismiss()
+//            progressDialog?.dismiss()
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {
             Log.d(TAG, "onLoaderReset")
             adapter.swapCursor(null)
 
-            progressDialog?.dismiss()
+//            progressDialog?.dismiss()
         }
     }
 
@@ -103,12 +103,14 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+        /*
         progressDialog = ProgressDialog(activity).apply() {
             isIndeterminate = true
             setMessage(getString(R.string.loading))
             setCancelable(false)
             show()
         }
+        */
 
         return inflater?.inflate(R.layout.fragment_episodes, container, false)
     }
@@ -117,10 +119,13 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
         super.onActivityCreated(savedInstanceState)
 
         listView = (view?.findViewById(R.id.episodes_listview) as MultiChoiceListView).apply {
+            emptyView = activity.findViewById(R.id.activity_progress)
             adapter = this@EpisodesFragment.adapter
             enableMultiChoice(menuCallbacks)
             onItemClickListener = this@EpisodesFragment
         }
+
+        Log.d(TAG, "adapter isEmpty=${listView?.adapter?.isEmpty}")
 
         loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
     }

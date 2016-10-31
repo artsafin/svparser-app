@@ -80,6 +80,7 @@ class SeasonsFragment: Fragment(), AdapterView.OnItemClickListener {
         val listview = view?.findViewById(R.id.seasons_listview) as ListView
         listview.adapter = adapter
         listview.onItemClickListener = this
+        listview.emptyView = activity.findViewById(R.id.activity_progress)
 
         loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
     }

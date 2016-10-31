@@ -101,6 +101,7 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
         val listView = view?.findViewById(R.id.serial_list_listview) as ListView
         listView.adapter = adapter
         listView.onItemClickListener = this
+        listView.emptyView = activity.findViewById(R.id.activity_progress)
 
         loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
 

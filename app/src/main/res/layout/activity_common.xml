@@ -17,6 +17,14 @@
 
         <include layout="@layout/part_appbar" />
 
+        <ProgressBar
+            android:id="@+id/activity_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:visibility="gone"/>
+
         <FrameLayout
             android:id="@+id/activity_content"
             android:layout_width="match_parent"

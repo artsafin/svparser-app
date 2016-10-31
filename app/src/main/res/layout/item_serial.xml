@@ -5,7 +5,10 @@
               android:layout_height="wrap_content"
               android:paddingTop="2dp"
               android:paddingBottom="2dp"
-              android:gravity="center_vertical">
+              android:gravity="center_vertical"
+              android:paddingRight="?android:attr/listPreferredItemPaddingRight"
+              android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+              android:minHeight="?android:attr/listPreferredItemHeightSmall">
 
     <com.android.volley.toolbox.NetworkImageView
         android:id="@+id/item_serial_list_image"
@@ -16,7 +19,6 @@
         android:id="@+id/item_serial_list_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:drawableEnd="@android:drawable/star_on"
-        android:drawableRight="@android:drawable/star_on"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
         />
 </LinearLayout>

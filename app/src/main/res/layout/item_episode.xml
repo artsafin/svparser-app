@@ -2,8 +2,6 @@
 <TextView
     xmlns:android="http://schemas.android.com/apk/res/android"
 
-    android:drawableRight="@android:drawable/ic_menu_view"
-    android:drawableEnd="@android:drawable/ic_menu_view"
     android:gravity="center_vertical"
     android:id="@+id/item_episode_text"
     android:layout_height="wrap_content"
