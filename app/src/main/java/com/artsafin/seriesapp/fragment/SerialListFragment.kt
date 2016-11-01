@@ -12,7 +12,6 @@ import android.support.v4.content.Loader
 import android.support.v4.widget.SimpleCursorAdapter
 import android.support.v7.widget.SearchView
 import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -24,7 +23,6 @@ import android.widget.ListView
 
 import com.artsafin.seriesapp.R
 import com.artsafin.seriesapp.activity.GlobalViewstate
-import com.artsafin.seriesapp.activity.Viewstate
 import com.artsafin.seriesapp.adapter.SerialListCursorAdapter
 import com.artsafin.seriesapp.dto.Serial
 
@@ -34,8 +32,6 @@ import com.artsafin.seriesapp.data.contract.*
  * A placeholder fragment containing a simple view.
  */
 open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
-    private val STATE_LIST = "state_scroll_y"
-
     open protected val LOADER_ID = 0
 
     var clickHandler: (serial: Serial) -> Unit = {}
@@ -116,7 +112,7 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     override fun onResume() {
         super.onResume()
 
-        if (GlobalViewstate.serial.isDirty) {
+        GlobalViewstate.serial.ifDirty(LOADER_ID) {
             loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
         }
     }

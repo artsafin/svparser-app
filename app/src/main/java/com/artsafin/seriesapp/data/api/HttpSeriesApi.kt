@@ -27,16 +27,6 @@ open class HttpSeriesApi : SeriesApi {
     private val TAG = HttpSeriesApi::class.java.simpleName
     private val BASE_URL = "http://138.68.84.5/api"
 
-    private class IdGenerator(val season: Season, startValue: Int = 1) {
-        private val MAX_EPISODES = 10000000
-
-        @Volatile private var next: Int = startValue
-
-        @Synchronized fun next() : Long {
-            return season.id * MAX_EPISODES + next++
-        }
-    }
-
     protected interface RequestExecutor {
         @Throws(IOException::class)
         fun execute(req: Request): Response
@@ -100,7 +90,7 @@ open class HttpSeriesApi : SeriesApi {
 
             val map = gson.fromJson<JsonObject>(body, JsonObject::class.java)
             if (map.has(DEFAULT_TRANSLATION_KEY)) {
-                val flat = hydrateJson(id = IdGenerator(season),
+                val flat = hydrateJson(season = season,
                                        json = map.getAsJsonObject(DEFAULT_TRANSLATION_KEY))
 
                 return flat
@@ -115,7 +105,7 @@ open class HttpSeriesApi : SeriesApi {
         return null
     }
 
-    private fun hydrateJson(id: IdGenerator, json: JsonObject, depth: Int = 2): Playlist {
+    private fun hydrateJson(season: Season, json: JsonObject, depth: Int = 2): Playlist {
         val result = Playlist()
 
         if (!json.has("playlist")) {
@@ -129,12 +119,12 @@ open class HttpSeriesApi : SeriesApi {
                 continue
             }
             if (elem.has("playlist") && depth >= 0) {
-                val subItems = hydrateJson(id, elem, depth - 1)
+                val subItems = hydrateJson(season, elem, depth - 1)
                 result.addAll(subItems)
             }
             if (elem.has("file")) {
                 val file = elem.get("file").asString ?: ""
-                result.add(Episode(id.next(), elem.get("comment").asString ?: file, file))
+                result.add(Episode(elem.get("comment").asString ?: file, file, season.id))
             }
         }
 

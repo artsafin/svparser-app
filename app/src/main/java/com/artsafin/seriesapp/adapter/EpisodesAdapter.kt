@@ -16,7 +16,7 @@ class EpisodesAdapter(context: Context)
 
     private data class ViewTag(val textField: TextView)
 
-    fun refreshItem(ep: Episode, view: TextView) {
+    private fun refreshItem(ep: Episode, view: TextView) {
         view.text = ep.comment
 
         if (ep.isWatched) {

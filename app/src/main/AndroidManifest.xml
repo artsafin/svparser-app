@@ -47,6 +47,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.artsafin.seriesapp.activity.MainActivity"/>
         </activity>
+        <activity
+            android:label="@string/recently_watched"
+            android:name=".activity.RecentlyWatchedActivity"
+            android:parentActivityName=".activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.artsafin.seriesapp.activity.MainActivity"/>
+        </activity>
     </application>
 
 </manifest>

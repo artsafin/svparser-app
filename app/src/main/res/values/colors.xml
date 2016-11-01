@@ -9,5 +9,6 @@
     <color name="icons">#FFFFFF</color>
     <color name="divider">#BDBDBD</color>
 
+    <color name="list_item_text_muted">#9E9E9E</color>
     <color name="list_item_focus_dark">#424242</color>
 </resources>

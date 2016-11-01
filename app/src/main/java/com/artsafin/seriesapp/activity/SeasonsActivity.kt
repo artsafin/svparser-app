@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.NavUtils
 import android.util.Log
+import android.view.Menu
 
 import com.artsafin.seriesapp.R
 import com.artsafin.seriesapp.fragment.EpisodesFragment
@@ -33,6 +34,19 @@ class SeasonsActivity : BaseActivity() {
 
             title = serial.name
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (viewState.serial != null) {
+            menuInflater.inflate(R.menu.serial, menu)
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        invalidateOptionsMenu()
     }
 
     override fun onAttachFragment(fragment: Fragment?) {

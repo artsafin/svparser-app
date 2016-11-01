@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.NavUtils
 import android.support.v7.view.ActionMode
 import android.util.Log
+import android.view.Menu
 import android.webkit.MimeTypeMap
 
 import com.artsafin.seriesapp.dto.Episode
@@ -34,6 +35,19 @@ class EpisodesActivity : BaseActivity() {
                     .commit()
             title = season.name
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (viewState.serial != null) {
+            menuInflater.inflate(R.menu.serial, menu)
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        invalidateOptionsMenu()
     }
 
     private fun createViewIntent(item: Episode): Intent {

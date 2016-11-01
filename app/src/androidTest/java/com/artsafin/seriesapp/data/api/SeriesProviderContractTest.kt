@@ -8,7 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import com.artsafin.seriesapp.data.contract.*
-import junit.framework.Assert.assertEquals
+import junit.framework.Assert.*
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
@@ -30,14 +30,14 @@ class SeriesProviderContractTest {
 
     @Test
     fun seasonsUrl() {
-        val uri = Seasons.urlSeasonsBySerial(100500)
+        val uri = Seasons.BySerial.urlSeasonsBySerial(100500)
 
         assertEquals("content://$AUTHORITY/seasons/100500", uri.toString())
     }
 
     @Test
     fun episodesUrl() {
-        val uri = Episodes.urlEpisodesBySeason(200600)
+        val uri = Episodes.BySeason.fetchBySeasonUrl(200600)
 
         assertEquals("content://$AUTHORITY/episodes/200600", uri.toString())
     }

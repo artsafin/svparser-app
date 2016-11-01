@@ -15,7 +15,14 @@
     <string name="mark_above_watched">Mark above watched</string>
     <string name="mark_below_not_watched">Mark below not watched</string>
 
-    <string name="items_selected">%d items</string>
+    <string name="_items_selected">%d items</string>
     <string name="add_to_favorites">Add to favorites</string>
     <string name="remove_from_favorites">Remove from favorites</string>
+    <string name="recently_watched">Recently watched</string>
+    <string name="added_favorites_">Added to favorites: %s</string>
+    <string name="removed_favorites_">Removed from favorites: %s</string>
+    <string name="clear">Clear</string>
+    <string name="are_you_sure_to_clear_watches">Are you sure you want to reset watched?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

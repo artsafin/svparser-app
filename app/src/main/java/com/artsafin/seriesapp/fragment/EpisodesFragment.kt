@@ -19,6 +19,8 @@ import com.artsafin.seriesapp.dto.Episode
 import com.artsafin.seriesapp.dto.Season
 import android.support.v7.view.ActionMode
 import android.util.Log
+import com.artsafin.seriesapp.activity.GlobalViewstate
+import com.artsafin.seriesapp.data.SeriesProvider
 import com.artsafin.seriesapp.util.*
 
 class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
@@ -30,7 +32,6 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
 
     lateinit private var season: Season
 
-//    private var progressDialog: ProgressDialog? = null
     private var listView: MultiChoiceListView? = null
 
     lateinit private var adapter: EpisodesAdapter
@@ -39,8 +40,8 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
             Log.d(TAG, "onCreateLoader: season=$season")
 
-            val fetchCached = args?.getBoolean("cached") ?: false
-            val url = Episodes.urlEpisodesBySeason(season.id, fetchCached)
+            val fetchCached = args?.getBoolean(SeriesProvider.PARAM_CACHED) ?: false
+            val url = Episodes.BySeason.fetchBySeasonUrl(season.id, fetchCached)
 
             return CursorLoader(
                     activity,
@@ -54,15 +55,11 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
         override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
             Log.d(TAG, "onLoadFinished: count=${data.count}")
             adapter.swapCursor(data)
-
-//            progressDialog?.dismiss()
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {
             Log.d(TAG, "onLoaderReset")
             adapter.swapCursor(null)
-
-//            progressDialog?.dismiss()
         }
     }
 
@@ -103,15 +100,6 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        /*
-        progressDialog = ProgressDialog(activity).apply() {
-            isIndeterminate = true
-            setMessage(getString(R.string.loading))
-            setCancelable(false)
-            show()
-        }
-        */
-
         return inflater?.inflate(R.layout.fragment_episodes, container, false)
     }
 
@@ -125,20 +113,23 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
             onItemClickListener = this@EpisodesFragment
         }
 
-        Log.d(TAG, "adapter isEmpty=${listView?.adapter?.isEmpty}")
-
         loaderManager.initLoader(LOADER_ID, null, loaderCallbacks)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        GlobalViewstate.episode.ifDirty(LOADER_ID) {
+            restartLoaderCached()
+        }
     }
 
     private fun toggleChecked(): Boolean {
         var firstWatched: Boolean? = null
 
-        val map = mutableMapOf<Episode, View?>()
+        val map = mutableSetOf<Episode>()
 
         listView?.let { listView ->
-            val firstVisible = listView.firstVisiblePosition
-            val lastVisible = listView.lastVisiblePosition
-
             listView.forEachChecked {
                 val cur = listView.getItemAtPosition(it) as Cursor
                 val ep = Episodes.ListProjection.toValueObject(cur)
@@ -146,8 +137,7 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
                 if (firstWatched == null) {
                     firstWatched = ep.isWatched
                 }
-                val itemView = if (it in firstVisible..lastVisible) listView.getChildAt(it) else null
-                map.put(ep, itemView)
+                map.add(ep)
             }
         }
 
@@ -183,37 +173,41 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
         return true
     }
 
-    private fun markEpisodesWatched(watched: Boolean, items: Map<Episode, View?>) {
+    private fun markEpisodesWatched(watched: Boolean, items: Set<Episode>) {
         if (items.size == 0) {
             return
         }
 
+        items.forEach { it.isWatched = watched }
+
         if (watched) {
-            val (uri, values) = Watches.insertManyQuery(season.id, items.keys.map { it._id }.toSet())
+            val (uri, values) = Episodes.Cached.insertManyQuery(items)
             activity.contentResolver.bulkInsert(uri, values)
         } else {
-            val (uri, where, whereArgs) = Watches.deleteManyQuery(items.keys.map { it._id }.toSet())
+            val (uri, where, whereArgs) = Episodes.Cached.deleteManyQuery(items)
             activity.contentResolver.delete(uri, where, whereArgs)
         }
 
+        GlobalViewstate.episode.dirty()
         // Refresh from cached cursor
-        val args = Bundle().apply { putBoolean("cached", true) }
+        restartLoaderCached()
+    }
+
+    private fun restartLoaderCached() {
+        val args = Bundle().apply { putBoolean(SeriesProvider.PARAM_CACHED, true) }
         loaderManager.restartLoader(LOADER_ID, args, loaderCallbacks)
     }
 
     private fun markWatchedRange(watched: Boolean, range: IntRange) {
-        val map = mutableMapOf<Episode, View?>()
+        val map = mutableSetOf<Episode>()
 
         Log.d(TAG, "markWatchedRange: $range = $watched")
 
         listView?.let { listView ->
-            val firstVisible = listView.firstVisiblePosition
-            val lastVisible = listView.lastVisiblePosition
-
             for (i in range) {
                 val cur = listView.getItemAtPosition(i) as Cursor
                 val ep = Episodes.ListProjection.toValueObject(cur)
-                map.put(ep, if (i in firstVisible..lastVisible) listView.getChildAt(i) else null)
+                map.add(ep)
             }
         }
 
@@ -228,7 +222,7 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
 
             if (clickHandler(ep)) {
                 if (!ep.isWatched) {
-                    markEpisodesWatched(true, mapOf(ep to view))
+                    markEpisodesWatched(true, setOf(ep))
                 }
             }
         }

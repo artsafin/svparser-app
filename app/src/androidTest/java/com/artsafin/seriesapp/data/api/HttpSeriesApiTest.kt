@@ -64,11 +64,11 @@ class HttpSeriesApiTest {
         val api = TestHttpSeriesApi(Response.Builder(),
                                     TestData.episodesOne)
 
-        val list = api.episodes(Season(0, 0, "Season name", "Season url", "Season year"), "Whatever")
+        val list = api.episodes(Season(111222, 0, "Season name", "Season url", "Season year"), "Whatever")
 
         val expected = Arrays.asList(
-                Episode(1, "0 серия SD/HD<br>BaibaKo",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e00.White.Christmas.HDTV720p.Rus.Eng.BaibaKo.tv.a1.25.11.15.mp4", false))
+                Episode("0 серия SD/HD<br>BaibaKo",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e00.White.Christmas.HDTV720p.Rus.Eng.BaibaKo.tv.a1.25.11.15.mp4", 111222))
 
         assertEquals(expected, list)
 
@@ -80,21 +80,21 @@ class HttpSeriesApiTest {
         val api = TestHttpSeriesApi(Response.Builder(),
                                     TestData.episodesMany)
 
-        val list = api.episodes(Season(0, 0, "Season name", "Season url", "Season year"), "Whatever")
+        val list = api.episodes(Season(111222, 0, "Season name", "Season url", "Season year"), "Whatever")
 
         val expected = Arrays.asList(
-                Episode(1, "1 серия SD/HD<br>Hamster",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_black.mirror.s03e01.720p.web-dl.hamsterstudio.org.a1.22.10.16.mp4"),
-                Episode(2, "2 серия SD/HD<br>Hamster",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_black.mirror.s03e02.720p.web-dl.hamsterstudio.org.a1.22.10.16.mp4"),
-                Episode(3, "3 серия SD/HD<br>Hamster",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_black.mirror.s03e03.720p.web-dl.hamsterstudio.org.a1.22.10.16.mp4"),
-                Episode(4, "4 серия SD/HD<br>Hamster",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e04.720p.WEB-DL.HamsterStudio.org.a1.22.10.16.mp4"),
-                Episode(5, "5 серия SD/HD<br>Hamster",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e05.720p.WEB-DL.HamsterStudio.org.a1.22.10.16.mp4"),
-                Episode(6, "6 серия SD<br>Hamster",
-                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e06.WEB-DLRip.HamsterStudio.org.a1.22.10.16.mp4"))
+                Episode("1 серия SD/HD<br>Hamster",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_black.mirror.s03e01.720p.web-dl.hamsterstudio.org.a1.22.10.16.mp4", 111222),
+                Episode("2 серия SD/HD<br>Hamster",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_black.mirror.s03e02.720p.web-dl.hamsterstudio.org.a1.22.10.16.mp4", 111222),
+                Episode("3 серия SD/HD<br>Hamster",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_black.mirror.s03e03.720p.web-dl.hamsterstudio.org.a1.22.10.16.mp4", 111222),
+                Episode("4 серия SD/HD<br>Hamster",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e04.720p.WEB-DL.HamsterStudio.org.a1.22.10.16.mp4", 111222),
+                Episode("5 серия SD/HD<br>Hamster",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e05.720p.WEB-DL.HamsterStudio.org.a1.22.10.16.mp4", 111222),
+                Episode("6 серия SD<br>Hamster",
+                        "http://temp-cdn.datalock.ru/fi2lm/f4843139951e49682b0390d793ce912c/7f_Black.Mirror.s03e06.WEB-DLRip.HamsterStudio.org.a1.22.10.16.mp4", 111222))
 
         assertEquals(expected, list)
 

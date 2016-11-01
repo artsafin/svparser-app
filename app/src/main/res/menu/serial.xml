@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_serial_add_favorite"
         android:icon="@drawable/ic_fav_on"
-        android:title="@string/add_to_favorites"/>
+        android:title="@string/add_to_favorites"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_serial_remove_favorite"
         android:icon="@drawable/ic_fav_off"
-        android:title="@string/remove_from_favorites"/>
+        android:title="@string/remove_from_favorites"
+        app:showAsAction="ifRoom" />
 </menu>

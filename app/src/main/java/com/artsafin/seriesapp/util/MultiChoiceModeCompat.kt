@@ -61,7 +61,7 @@ class MultiChoiceModeCompat(activity: AppCompatActivity, listView: ListView, use
 //                    Log.d(TAG, "onPrepareActionMode: finish")
                     mode?.finish()
                 } else if (listView.checkedItemCount > 1) {
-                    mode?.title = activity.resources.getString(R.string.items_selected, listView.checkedItemCount)
+                    mode?.title = activity.resources.getString(R.string._items_selected, listView.checkedItemCount)
                 } else {
                     mode?.title = ""
                 }

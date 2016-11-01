@@ -3,15 +3,12 @@ package com.artsafin.seriesapp.activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.NavigationView
-import android.support.v4.app.Fragment
-import android.support.v4.app.NavUtils
+import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBar
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 
@@ -23,7 +20,8 @@ import com.artsafin.seriesapp.fragment.SerialListFragment
 open class BaseActivity : AppCompatActivity() {
     private val TAG = BaseActivity::class.java.simpleName
     lateinit protected var toolbar: Toolbar
-    lateinit protected var viewState: Viewstate
+    lateinit protected var viewState: ViewState
+    lateinit protected var navigationView: NavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +36,12 @@ open class BaseActivity : AppCompatActivity() {
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-        val navigationView = findViewById(R.id.nav_view) as NavigationView
+        navigationView = findViewById(R.id.nav_view) as NavigationView
         navigationView.setNavigationItemSelectedListener { item ->
             val result = when (item.itemId) {
                 R.id.nav_serials -> navigateSerials()
                 R.id.nav_favorites -> navigateFavorites()
+                R.id.nav_recently_watched -> navigateRecentlyWatched()
                 else -> false
             }
 
@@ -53,20 +52,13 @@ open class BaseActivity : AppCompatActivity() {
             result
         }
 
-        viewState = intent?.getViewstate() ?: Viewstate()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        if (viewState.serial != null) {
-            menuInflater.inflate(R.menu.serial, menu)
-        }
-        return super.onCreateOptionsMenu(menu)
+        viewState = GlobalViewstate.viewState
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         viewState.serial?.run {
-            menu?.findItem(R.id.menu_serial_add_favorite)?.isVisible = !flags.favorite
-            menu?.findItem(R.id.menu_serial_remove_favorite)?.isVisible = flags.favorite
+            menu?.findItem(R.id.menu_serial_add_favorite)?.isVisible = !favorite
+            menu?.findItem(R.id.menu_serial_remove_favorite)?.isVisible = favorite
         }
 
         return super.onPrepareOptionsMenu(menu)
@@ -74,9 +66,14 @@ open class BaseActivity : AppCompatActivity() {
 
     private fun markSerialFavorite(serial: Serial, fav: Boolean) {
         with (Serials.Fav.updateQuery(serial, fav)) {
-            if (contentResolver.update(url, values, where, whereArgs) > 0) {
+            if (contentResolver.update(first, second.values, second.where, second.whereArgs) > 0) {
                 serial.favorite = fav
+                invalidateOptionsMenu()
                 GlobalViewstate.serial.dirty()
+
+                Snackbar.make(this@BaseActivity.findViewById(android.R.id.content),
+                              getString(if (fav) R.string.added_favorites_ else R.string.removed_favorites_, serial.name),
+                              Snackbar.LENGTH_SHORT).show()
             }
         }
     }
@@ -105,6 +102,13 @@ open class BaseActivity : AppCompatActivity() {
 
     protected fun navigateFavorites(): Boolean {
         val intent = Intent(this, FavoritesActivity::class.java).with(viewState)
+        startActivity(intent)
+
+        return true
+    }
+
+    protected fun navigateRecentlyWatched(): Boolean {
+        val intent = Intent(this, RecentlyWatchedActivity::class.java).with(viewState)
         startActivity(intent)
 
         return true

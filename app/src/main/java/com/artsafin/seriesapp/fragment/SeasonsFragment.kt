@@ -36,7 +36,7 @@ class SeasonsFragment: Fragment(), AdapterView.OnItemClickListener {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
             return CursorLoader(
                     activity,
-                    Seasons.urlSeasonsBySerial(serial?.id ?: -1),
+                    Seasons.BySerial.urlSeasonsBySerial(serial?.id ?: -1),
                     Seasons.ListProjection.FIELDS,
                     null,
                     null,
@@ -95,7 +95,7 @@ class SeasonsFragment: Fragment(), AdapterView.OnItemClickListener {
     override fun onResume() {
         super.onResume()
 
-        if (GlobalViewstate.season.isDirty) {
+        GlobalViewstate.season.ifDirty(LOADER_ID) {
             loaderManager.restartLoader(LOADER_ID, null, loaderCallbacks)
         }
     }

@@ -7,14 +7,15 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
 import com.artsafin.seriesapp.data.ListCursor
+import com.artsafin.seriesapp.data.SelectionArgs
+import com.artsafin.seriesapp.data.SeriesProvider
+import com.artsafin.seriesapp.data.UpdateArgs
 
 import com.artsafin.seriesapp.dto.Episode
 import com.artsafin.seriesapp.dto.Playlist
 import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.dto.Serial
 import java.util.*
-
-data class UpdateArgs(val url: Uri, val values: ContentValues, val where: String, val whereArgs: Array<String>)
 
 // non-private for tests
 val AUTHORITY = "com.artsafin.seriesapp.data.api.provider.serialapi"
@@ -23,6 +24,7 @@ private val baseUri = Uri.parse("content://" + AUTHORITY)
 
 object Serials {
     val PATH = "serials"
+    val ALIAS = "serials"
 
     val MATCHER_ID = 0
     val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
@@ -43,18 +45,18 @@ object Serials {
         val builder = baseUri.buildUpon().appendPath(PATH)
 
         if (search != null) {
-            builder.appendQueryParameter("search", search)
+            builder.appendQueryParameter(SeriesProvider.PARAM_SEARCH, search)
         }
 
         return builder.build()
     }
 
     object Fav {
-        fun updateQuery(serial: Serial, favorite: Boolean): UpdateArgs {
+        fun updateQuery(serial: Serial, favorite: Boolean): Pair<Uri, UpdateArgs> {
             val values = ContentValues().apply {
                 put(FAVORITE, if (favorite) 1 else 0)
             }
-            return UpdateArgs(baseUri.buildUpon().appendPath(PATH).build(), values, "$_ID = ?", arrayOf(serial.id.toString()))
+            return baseUri.buildUpon().appendPath(PATH).build() to UpdateArgs(values, "$_ID = ?", arrayOf(serial.id.toString()))
         }
 
         val where: String? = "$FAVORITE = ?"
@@ -70,15 +72,13 @@ object Serials {
                     cursor.getLong(0),
                     cursor.getString(1),
                     cursor.getString(2),
-                    Serial.Flags(favorite = cursor.getInt(3) > 0))
+                    cursor.getInt(3) > 0)
         }
     }
 }
 
 object Seasons {
-    val PATH = "seasons"
-    val MATCHER_ID = 1
-    val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
+    val ALIAS = "seasons"
 
     val NAME = "name"
     val URL = "url"
@@ -87,112 +87,170 @@ object Seasons {
     val _ID = "_id"
     val SERIAL_ID = "serial_id"
 
-    fun urlSeasonsBySerial(id: Long): Uri {
-        return ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id).build()
+    object BySerial {
+        val PATH = "${Serials.PATH}/seasons"
+        val MATCHER_ID = 1
+        val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
+
+        fun urlSeasonsBySerial(id: Long): Uri {
+            return ContentUris.appendId(baseUri.buildUpon().appendEncodedPath(PATH), id).build()
+        }
+    }
+
+    object Cached {
+        val PATH = "seasons"
+        val MATCHER_ID = 4
+        val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
+
+        fun fetchByIdUrl(id: Long): Pair<Uri, SelectionArgs> {
+            val url = baseUri.buildUpon().appendEncodedPath(PATH).build()
+            return url to SelectionArgs(
+                    Seasons.ListProjection.FIELDS,
+                    "$_ID=?", arrayOf(id.toString()))
+        }
     }
 
     object ListProjection {
         val FIELDS = arrayOf(_ID, SERIAL_ID, NAME, URL, YEAR)
-        val SORT_ORDER = NAME + " ASC"
+        val SORT_ORDER = "$NAME ASC"
 
-        fun toValueObject(cursor: Cursor): Season {
+        fun toValueObject(cursor: Cursor, offset: Int = 0): Season {
             return Season(
-                    cursor.getLong(0),
-                    cursor.getLong(1),
-                    cursor.getString(2),
-                    cursor.getString(3),
-                    cursor.getString(4))
+                    cursor.getLong(offset + 0),
+                    cursor.getLong(offset + 1),
+                    cursor.getString(offset + 2),
+                    cursor.getString(offset + 3),
+                    cursor.getString(offset + 4))
         }
     }
 }
 
 object Episodes {
-    val PATH = "episodes"
-    val MATCHER_ID = 2
+    private val PATH = "episodes"
+    val ALIAS = "episodes"
     val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
 
     val _ID = "_id"
-    val COMMENT = "comment"
-    val FILE = "file"
-    val IS_WATCHED = "watched"
-
-    val WATCHED_TYPE_ID = 1
-
-    fun urlEpisodesBySeason(id: Long, fetchCached: Boolean = false): Uri {
-        val builder = ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id)
-
-        if (fetchCached) {
-            builder.appendQueryParameter("cached", "1")
-        }
-
-        return builder.build()
-    }
-
-    object ListProjection {
-        val FIELDS = arrayOf(_ID, COMMENT, FILE, IS_WATCHED)
-
-        fun toValueObject(cursor: Cursor): Episode {
-            return Episode(
-                    cursor.getLong(0),
-                    cursor.getString(1),
-                    cursor.getString(2),
-                    cursor.getInt(3) > 0)
-        }
-
-        fun toCursor(episodes: Playlist): Cursor {
-            return ListCursor(episodes)
-                    .column(0, Episodes._ID, { _id })
-                    .column(1, Episodes.COMMENT, { comment })
-                    .column(2, Episodes.FILE, { file })
-                    .column(3, Episodes.IS_WATCHED, { if (isWatched) 1 else 0 })
-        }
-    }
-}
-
-object Watches {
-    val PATH = "watches"
-    val MATCHER_ID = 3
-    val MIME_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + PATH
-
-    val _ID = "_id"
-    val TYPE_ID = "type_id"
-    val ITEM_ID = "item_id"
     val SEASON_ID = "season_id"
+    val FILE = "file"
+    val COMMENT = "comment"
+    val IS_WATCHED = "watched"
     val UPDATE_TS = "update_ts"
 
-    fun newUrl(watchId: Long): Uri {
+    fun urlOfNewItem(id: Long): Uri {
         return baseUri.buildUpon()
                 .appendPath(PATH)
-                .appendEncodedPath(watchId.toString())
+                .appendEncodedPath(id.toString())
                 .build()
     }
 
-    fun insertManyQuery(seasonId: Long, eps: Set<Long>): Pair<Uri, Array<ContentValues>> {
-        val values = eps.map {
-            ContentValues().apply {
-                put(TYPE_ID, Episodes.WATCHED_TYPE_ID)
-                put(ITEM_ID, it)
-                put(SEASON_ID, seasonId)
+    object BySeason {
+        val PATH = Episodes.PATH
+        val MATCHER_ID = 2
+
+        fun fetchBySeasonUrl(id: Long, fetchCached: Boolean = false): Uri {
+            val builder = ContentUris.appendId(baseUri.buildUpon().appendPath(PATH), id)
+
+            if (fetchCached) {
+                builder.appendQueryParameter(SeriesProvider.PARAM_CACHED, "1")
             }
+
+            return builder.build()
         }
-        return Pair(baseUri.buildUpon().appendPath(PATH).build(), values.toTypedArray())
     }
 
-    fun deleteManyQuery(eps: Set<Long>): Triple<Uri, String?, Array<String>?> {
-        val where = "$TYPE_ID = ? AND $ITEM_ID IN (${Array(eps.size, { "?" }).joinToString(",")})"
-        val args = arrayListOf(Episodes.WATCHED_TYPE_ID.toString())
-        args.addAll(eps.map(Long::toString))
+    object Cached {
+        val PATH = Episodes.PATH
+        val MATCHER_ID = 3
 
-        return Triple(baseUri.buildUpon().appendPath(PATH).build(), where, args.toTypedArray())
+        private val url = baseUri.buildUpon().appendPath(PATH).build()
+
+        fun fetchRecentlyWatchedUrl(projection: Array<String>?): Pair<Uri, SelectionArgs> {
+            return url to SelectionArgs(projection,
+                                        "$ALIAS.$IS_WATCHED=?",
+                                        arrayOf("1"),
+                                        "$ALIAS.$UPDATE_TS DESC")
+        }
+
+        fun insertManyQuery(eps: Set<Episode>): Pair<Uri, Array<ContentValues>> {
+            val values = eps.map { it.toContentValues() }
+            return Pair(url, values.toTypedArray())
+        }
+
+        fun deleteManyQuery(eps: Set<Episode>): Triple<Uri, String?, Array<String>?> {
+            val where = "$_ID IN (${Array(eps.size, { "?" }).joinToString(",")})"
+            val args = eps.map { it._id.toString() }
+
+            return Triple(url, where, args.toTypedArray())
+        }
+
+        fun deleteAllQuery(): Triple<Uri, String?, Array<String>?> {
+            val where = ""
+            val args = arrayOf<String>()
+
+            return Triple(url, where, args)
+        }
+    }
+
+    object JoinedSeasonProjection {
+        val FIELDS = arrayOf(
+                *Episodes.ListProjection.FIELDS.map { "${Episodes.ALIAS}.$it as ${Episodes.ALIAS}_$it" }.toTypedArray(),
+                *Seasons.ListProjection.FIELDS.map { "${Seasons.ALIAS}.$it as ${Seasons.ALIAS}_$it" }.toTypedArray()
+        )
+        val FIELDS_ALIASES = arrayOf(
+                *Episodes.ListProjection.FIELDS.map { "${Episodes.ALIAS}_$it" }.toTypedArray(),
+                *Seasons.ListProjection.FIELDS.map { "${Seasons.ALIAS}_$it" }.toTypedArray()
+        )
+
+        fun toValueObject(cursor: Cursor): Pair<Episode, Season> {
+            val e = Episodes.ListProjection.toValueObject(cursor)
+            val s = Seasons.ListProjection.toValueObject(cursor, Episodes.ListProjection.FIELDS.size)
+            return Pair(e, s)
+        }
+    }
+
+    object ListProjection {
+        val FIELDS = arrayOf(_ID, SEASON_ID, FILE, COMMENT, IS_WATCHED, UPDATE_TS)
+
+        fun toValueObject(cursor: Cursor, offset: Int = 0) = Episode(
+            seasonId = cursor.getLong(offset + 1),
+            file = cursor.getString(offset + 2),
+            comment = cursor.getString(offset + 3),
+            isWatched = cursor.getInt(offset + 4) > 0,
+            updateTs = cursor.getString(offset + 5) ?: ""
+        )
+
+        fun toCursor(episodes: Playlist, offset: Int = 0) = ListCursor(episodes)
+                .column(offset + 0, Episodes._ID, { _id })
+                .column(offset + 1, Episodes.SEASON_ID, { seasonId })
+                .column(offset + 2, Episodes.FILE, { file })
+                .column(offset + 3, Episodes.COMMENT, { comment })
+                .column(offset + 4, Episodes.IS_WATCHED, { if (isWatched) 1 else 0 })
+                .column(offset + 5, Episodes.UPDATE_TS, { updateTs })
+    }
+
+    fun Episode.toContentValues() = ContentValues().apply {
+        put(_ID, _id)
+        put(SEASON_ID, seasonId)
+        put(FILE, file)
+        put(COMMENT, comment)
+        put(IS_WATCHED, if (isWatched) 1 else 0)
     }
 }
 
 object ContractMatcher {
     private val matcher = UriMatcher(UriMatcher.NO_MATCH).apply {
+        if (arrayOf(Serials.MATCHER_ID, Seasons.BySerial.MATCHER_ID, Seasons.Cached.MATCHER_ID,
+                    Episodes.BySeason.MATCHER_ID, Episodes.Cached.MATCHER_ID)
+                .sum() != 0 + 1 + 2 + 3 + 4) {
+            throw RuntimeException("MATCHER_ID not unique")
+        }
+
         addURI(AUTHORITY, Serials.PATH, Serials.MATCHER_ID)
-        addURI(AUTHORITY, Seasons.PATH + "/#", Seasons.MATCHER_ID)
-        addURI(AUTHORITY, Episodes.PATH + "/#", Episodes.MATCHER_ID)
-        addURI(AUTHORITY, Watches.PATH, Watches.MATCHER_ID)
+        addURI(AUTHORITY, Seasons.BySerial.PATH + "/#", Seasons.BySerial.MATCHER_ID)
+        addURI(AUTHORITY, Seasons.Cached.PATH + "/#", Seasons.Cached.MATCHER_ID)
+        addURI(AUTHORITY, Episodes.BySeason.PATH + "/#", Episodes.BySeason.MATCHER_ID)
+        addURI(AUTHORITY, Episodes.Cached.PATH, Episodes.Cached.MATCHER_ID)
     }
 
     fun matchUri(uri: Uri): Int {

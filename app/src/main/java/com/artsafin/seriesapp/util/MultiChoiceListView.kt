@@ -21,8 +21,12 @@ class MultiChoiceListView(context: Context, attrs: AttributeSet?, defStyleAttr: 
 
     var actionMode: MultiChoiceModeCompat? = null
 
-    fun enableMultiChoice(menuCallbacks: ActionMode.Callback) {
-        actionMode = MultiChoiceModeCompat(context as AppCompatActivity, this, menuCallbacks)
+    fun enableMultiChoice(menuCallbacks: ActionMode.Callback?) {
+        if (menuCallbacks != null) {
+            actionMode = MultiChoiceModeCompat(context as AppCompatActivity, this, menuCallbacks)
+        } else {
+            actionMode = null
+        }
     }
 
     override fun setOnItemClickListener(listener: OnItemClickListener?) {

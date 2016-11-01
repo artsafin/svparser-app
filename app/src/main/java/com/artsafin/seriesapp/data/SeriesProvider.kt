@@ -9,10 +9,16 @@ import android.util.Log
 import com.artsafin.seriesapp.data.contract.*
 
 import com.artsafin.seriesapp.data.api.HttpSeriesApi
+import com.artsafin.seriesapp.data.db.Database
 
 
 class SeriesProvider : ContentProvider() {
-    private val TAG = SeriesProvider::class.java.simpleName
+    companion object {
+        val PARAM_SEARCH = "search"
+        val PARAM_CACHED = "cached"
+    }
+
+    private fun LOGD(s: String) = Log.d(javaClass.simpleName, s)
 
     lateinit private var api: CursorApiLoader
     lateinit private var db: Database
@@ -26,69 +32,64 @@ class SeriesProvider : ContentProvider() {
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
         val selArgs = SelectionArgs(projection, selection, selectionArgs, sortOrder)
-        Log.d(TAG, "query: $selArgs")
+        LOGD("query $uri: $selArgs")
         return when (ContractMatcher.matchUri(uri)) {
-            Serials.MATCHER_ID -> api.serials(uri.getQueryParameter("search"), selArgs)
-            Seasons.MATCHER_ID -> api.seasons(ContentUris.parseId(uri), selArgs)
-            Episodes.MATCHER_ID -> api.episodes(ContentUris.parseId(uri), uri.getBooleanQueryParameter("cached", false))
+            Serials.MATCHER_ID -> api.serials(uri.getQueryParameter(PARAM_SEARCH), selArgs)
+
+            Seasons.BySerial.MATCHER_ID -> api.seasonsBySerial(ContentUris.parseId(uri), selArgs)
+            Episodes.BySeason.MATCHER_ID -> api.episodesBySeason(ContentUris.parseId(uri), uri.getBooleanQueryParameter(PARAM_CACHED, false))
+
+            Seasons.Cached.MATCHER_ID -> api.seasons(selArgs)
+            Episodes.Cached.MATCHER_ID -> api.episodes(selArgs)
             else -> null
         }
     }
 
     override fun getType(uri: Uri) = when (ContractMatcher.matchUri(uri)) {
         Serials.MATCHER_ID -> Serials.MIME_TYPE_DIR
-        Seasons.MATCHER_ID -> Seasons.MIME_TYPE_DIR
-        Episodes.MATCHER_ID -> Episodes.MIME_TYPE_DIR
-        Watches.MATCHER_ID -> Watches.MIME_TYPE
+        Seasons.BySerial.MATCHER_ID -> Seasons.BySerial.MIME_TYPE_DIR
+        Seasons.Cached.MATCHER_ID -> Seasons.Cached.MIME_TYPE_DIR
+        Episodes.BySeason.MATCHER_ID -> Episodes.MIME_TYPE_DIR
+        Episodes.Cached.MATCHER_ID -> Episodes.MIME_TYPE_DIR
         else -> null
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
-        if (ContractMatcher.matchUri(uri) == Watches.MATCHER_ID) {
-            return insertWatches(values)
+        if (ContractMatcher.matchUri(uri) == Episodes.Cached.MATCHER_ID) {
+            values ?: throw UnsupportedOperationException("Cannot insert null")
+
+            LOGD("insertEpisodes: $values")
+
+            val id = db.episodes.insert(values)
+
+            return if (id >= 0) Episodes.urlOfNewItem(id) else null
         }
 
         throw UnsupportedOperationException("This url is read only: " + uri.toString())
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-        if (ContractMatcher.matchUri(uri) != Watches.MATCHER_ID) {
-            throw UnsupportedOperationException("This url is read only: " + uri.toString())
+        if (ContractMatcher.matchUri(uri) == Episodes.Cached.MATCHER_ID) {
+            selection ?: throw UnsupportedOperationException("Arguments must be specified for delete operation: selection")
+            selectionArgs ?: throw UnsupportedOperationException("Arguments must be specified for delete operation: selectionArgs")
+
+            LOGD("provider $uri: bulk delete: ${selectionArgs.joinToString(",")}")
+
+            return db.episodes.delete(selection, selectionArgs)
         }
 
-        selection ?: throw UnsupportedOperationException("Arguments must be specified for delete operation: selection")
-        selectionArgs ?: throw UnsupportedOperationException("Arguments must be specified for delete operation: selectionArgs")
-
-        Log.d(TAG, "provider $uri: bulk delete: ${selectionArgs.joinToString(",")}")
-
-        return db.deleteWatch(selection, selectionArgs)
+        throw UnsupportedOperationException("This url is read only: " + uri.toString())
     }
 
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?): Int {
-        if (ContractMatcher.matchUri(uri) != Serials.MATCHER_ID) {
-            throw UnsupportedOperationException("This url is read only: " + uri.toString())
+        if (ContractMatcher.matchUri(uri) == Serials.MATCHER_ID) {
+            values ?: throw UnsupportedOperationException("Arguments must be specified for update operation: values")
+            selection ?: throw UnsupportedOperationException("Arguments must be specified for update operation: selection")
+            selectionArgs ?: throw UnsupportedOperationException("Arguments must be specified for update operation: selectionArgs")
+
+            return db.serials.updateSerials(values, selection, selectionArgs)
         }
 
-        values ?: throw UnsupportedOperationException("Arguments must be specified for update operation: values")
-        selection ?: throw UnsupportedOperationException("Arguments must be specified for update operation: selection")
-        selectionArgs ?: throw UnsupportedOperationException("Arguments must be specified for update operation: selectionArgs")
-
-        return db.updateSerials(values, selection, selectionArgs)
-    }
-
-    private fun insertWatches(values: ContentValues?): Uri? {
-        if (values == null) {
-            throw UnsupportedOperationException("Cannot insert null")
-        }
-
-        values.getAsLong(Watches.TYPE_ID) ?: throw UnsupportedOperationException("Cannot insert null: TYPE_ID")
-        values.getAsLong(Watches.ITEM_ID) ?: throw UnsupportedOperationException("Cannot insert null: ITEM_ID")
-        values.getAsLong(Watches.SEASON_ID) ?: throw UnsupportedOperationException("Cannot insert null: SEASON_ID")
-
-        Log.d(TAG, "insertWatches: $values")
-
-        val id = db.insertWatch(values)
-
-        return Watches.newUrl(id)
+        throw UnsupportedOperationException("This url is read only: " + uri.toString())
     }
 }

@@ -10,6 +10,10 @@
             android:id="@+id/nav_favorites"
             android:icon="@drawable/ic_fav_on"
             android:title="@string/favorites" />
+        <item
+            android:id="@+id/nav_recently_watched"
+            android:icon="@drawable/ic_recent"
+            android:title="@string/recently_watched" />
 
     </group>
 

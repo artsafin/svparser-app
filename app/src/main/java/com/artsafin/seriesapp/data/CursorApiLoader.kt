@@ -8,6 +8,7 @@ import java.io.IOException
 
 import com.artsafin.seriesapp.data.api.SeriesApi
 import com.artsafin.seriesapp.data.contract.Episodes
+import com.artsafin.seriesapp.data.db.Database
 import com.artsafin.seriesapp.dto.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,27 +16,30 @@ import okhttp3.Response
 
 class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
 
-    private val TAG = CursorApiLoader::class.java.simpleName
+    private fun LOGD(s: String) = Log.d(javaClass.simpleName, s)
     private val playlistCache = LruCache<Long, Playlist>(1)
 
     fun serials(search: String?, selArgs: SelectionArgs): Cursor {
         if (search == null && (selArgs.selection?.length ?: 0) > 0) {
-            Log.d(TAG, "serials: fetching from cache")
-            return cache.serials(null, selArgs, null)
+            LOGD("serials: fetching from cache")
+            return cache.serials.fetch(null, selArgs)
         } else {
-            return cache.serials(search, selArgs, { api.serials(search) ?: listOf() })
+            return cache.serials.fetchOrLoad(search, selArgs, { api.serials(search) ?: listOf() })
         }
     }
 
-    fun seasons(serialId: Long, selArgs: SelectionArgs): Cursor {
-        return cache.seasons(serialId, selArgs, fun(): List<Season> {
-            val s = cache.findSerialById(serialId)
-            return if (s != null) (api.seasons(s.name) ?: listOf()) else listOf()
+    fun seasonsBySerial(serialId: Long, selArgs: SelectionArgs): Cursor {
+        return cache.seasons.fetchOrLoadBySerial(serialId, selArgs, fun(): List<Season> {
+            val s = cache.serials.findById(serialId) ?: return listOf()
+            val apiResult = api.seasons(s.name) ?: return listOf()
+            return apiResult.map { it.serialId = serialId; it }
         })
     }
 
+    fun seasons(selArgs: SelectionArgs) = cache.seasons.fetch(selArgs)
+
     private fun loadPlaylist(seasonId: Long): Playlist? {
-        val s = cache.findSeasonById(seasonId) ?: return null
+        val s = cache.seasons.findById(seasonId) ?: return null
 
         val client = OkHttpClient()
 
@@ -58,18 +62,20 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
         return null
     }
 
-    fun episodes(seasonId: Long, cached: Boolean): Cursor? {
+    fun episodesBySeason(seasonId: Long, cached: Boolean): Cursor? {
         val playlist = if (cached) {
-            Log.d(TAG, "episodes: fetching cached!")
+            LOGD("episodesBySeason: fetching cached")
             playlistCache.get(seasonId) ?: loadPlaylist(seasonId) ?: return null
         } else {
-            Log.d(TAG, "episodes: fetching from db")
+            LOGD("episodesBySeason: fetching from db")
             loadPlaylist(seasonId) ?: return null
         }
 
         playlistCache.put(seasonId, playlist)
 
-        cache.updateWatched(playlist, Episode::updateWatched)
+        cache.episodes.joinInplace(playlist)
         return Episodes.ListProjection.toCursor(playlist)
     }
+
+    fun episodes(selArgs: SelectionArgs) = cache.episodes.fetch(selArgs)
 }
