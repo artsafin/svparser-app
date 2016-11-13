@@ -9,19 +9,23 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 
 import com.artsafin.seriesapp.R
+import com.artsafin.seriesapp.data.UserSettings
 import com.artsafin.seriesapp.data.contract.Serials
 import com.artsafin.seriesapp.dto.Serial
 import com.artsafin.seriesapp.fragment.SerialListFragment
 
-open class BaseActivity : AppCompatActivity() {
-    private val TAG = BaseActivity::class.java.simpleName
+open class BaseActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    private fun LOGD(s: String) = Log.d(javaClass.simpleName, s)
+
     lateinit protected var toolbar: Toolbar
     lateinit protected var viewState: ViewState
     lateinit protected var navigationView: NavigationView
+    lateinit protected var drawer: DrawerLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,27 +34,14 @@ open class BaseActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout
+        drawer = findViewById(R.id.drawer_layout) as DrawerLayout
         val toggle = ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
                                            R.string.navigation_drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
         navigationView = findViewById(R.id.nav_view) as NavigationView
-        navigationView.setNavigationItemSelectedListener { item ->
-            val result = when (item.itemId) {
-                R.id.nav_serials -> navigateSerials()
-                R.id.nav_favorites -> navigateFavorites()
-                R.id.nav_recently_watched -> navigateRecentlyWatched()
-                else -> false
-            }
-
-            if (result) {
-                drawer.closeDrawer(GravityCompat.START)
-            }
-
-            result
-        }
+        navigationView.setNavigationItemSelectedListener(this)
 
         viewState = GlobalViewstate.viewState
     }
@@ -112,6 +103,40 @@ open class BaseActivity : AppCompatActivity() {
         startActivity(intent)
 
         return true
+    }
+
+    private fun markForRefresh() {
+        GlobalViewstate.SerialsLoaderFlags.noCache = true
+        GlobalViewstate.SeasonsLoaderFlags.noCache = true
+        UserSettings.setLastUpdate(this)
+
+        LOGD("markForRefresh")
+
+        navigateSerials()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (UserSettings.checkUpdateNeeded(this)) {
+            markForRefresh()
+        }
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        val result = when (item.itemId) {
+            R.id.nav_serials -> navigateSerials()
+            R.id.nav_favorites -> navigateFavorites()
+            R.id.nav_recently_watched -> navigateRecentlyWatched()
+            R.id.nav_download -> {markForRefresh(); true}
+            else -> false
+        }
+
+        if (result) {
+            drawer.closeDrawer(GravityCompat.START)
+        }
+
+        return result
     }
 
     override fun onBackPressed() {

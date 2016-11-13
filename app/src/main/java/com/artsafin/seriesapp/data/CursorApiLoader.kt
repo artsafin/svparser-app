@@ -19,17 +19,17 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
     private fun LOGD(s: String) = Log.d(javaClass.simpleName, s)
     private val playlistCache = LruCache<Long, Playlist>(1)
 
-    fun serials(search: String?, selArgs: SelectionArgs): Cursor {
+    fun serials(search: String?, useCache: Boolean, selArgs: SelectionArgs): Cursor {
         if (search == null && (selArgs.selection?.length ?: 0) > 0) {
             LOGD("serials: fetching from cache")
             return cache.serials.fetch(null, selArgs)
         } else {
-            return cache.serials.fetchOrLoad(search, selArgs, { api.serials(search) ?: listOf() })
+            return cache.serials.fetchOrLoad(search, useCache, selArgs, { api.serials(search) ?: listOf() })
         }
     }
 
-    fun seasonsBySerial(serialId: Long, selArgs: SelectionArgs): Cursor {
-        return cache.seasons.fetchOrLoadBySerial(serialId, selArgs, fun(): List<Season> {
+    fun seasonsBySerial(serialId: Long, useCache: Boolean, selArgs: SelectionArgs): Cursor {
+        return cache.seasons.fetchOrLoadBySerial(serialId, useCache, selArgs, fun(): List<Season> {
             val s = cache.serials.findById(serialId) ?: return listOf()
             val apiResult = api.seasons(s.name) ?: return listOf()
             return apiResult.map { it.serialId = serialId; it }
@@ -62,8 +62,8 @@ class CursorApiLoader(private val api: SeriesApi, private val cache: Database) {
         return null
     }
 
-    fun episodesBySeason(seasonId: Long, cached: Boolean): Cursor? {
-        val playlist = if (cached) {
+    fun episodesBySeason(seasonId: Long, useCache: Boolean): Cursor? {
+        val playlist = if (useCache) {
             LOGD("episodesBySeason: fetching cached")
             playlistCache.get(seasonId) ?: loadPlaylist(seasonId) ?: return null
         } else {

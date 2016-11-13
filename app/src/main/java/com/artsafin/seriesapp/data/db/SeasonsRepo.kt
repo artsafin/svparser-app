@@ -50,9 +50,9 @@ class SeasonsRepo(private val db: Database) {
         return null
     }
 
-    fun fetchOrLoadBySerial(serialId: Long, selArgs: SelectionArgs, loader: () -> List<Season>): Cursor {
+    fun fetchOrLoadBySerial(serialId: Long, useCache: Boolean, selArgs: SelectionArgs, loader: () -> List<Season>): Cursor {
         val c = fetchBySerial(serialId, selArgs)
-        if (c.count == 0) {
+        if (!useCache || c.count == 0) {
             LOGD("seasons: fetching from api id=$serialId")
             loadAndInsertSeasons(loader)
             return fetchBySerial(serialId, selArgs)
@@ -73,6 +73,8 @@ class SeasonsRepo(private val db: Database) {
         val db = db.writableDatabase
         try {
             db.beginTransaction()
+
+            db.delete(TABLE, "", arrayOf())
 
             loader().forEach {
                 db.insert(TABLE, null, ContentValues().apply {

@@ -52,9 +52,11 @@ class EpisodesFragment: Fragment(), AdapterView.OnItemClickListener {
                     null)
         }
 
-        override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-            Log.d(TAG, "onLoadFinished: count=${data.count}")
-            adapter.swapCursor(data)
+        override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
+            if (data != null) {
+                Log.d(TAG, "onLoadFinished: count=${data.count}")
+                adapter.swapCursor(data)
+            }
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {

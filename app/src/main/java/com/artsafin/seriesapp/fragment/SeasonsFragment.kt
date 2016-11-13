@@ -36,15 +36,19 @@ class SeasonsFragment: Fragment(), AdapterView.OnItemClickListener {
         override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
             return CursorLoader(
                     activity,
-                    Seasons.BySerial.urlSeasonsBySerial(serial?.id ?: -1),
+                    Seasons.BySerial.urlSeasonsBySerial(serial?.id ?: -1, GlobalViewstate.SeasonsLoaderFlags.noCache),
                     Seasons.ListProjection.FIELDS,
                     null,
                     null,
                     Seasons.ListProjection.SORT_ORDER)
         }
 
-        override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-            adapter.swapCursor(data)
+        override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
+            if (data != null) {
+                adapter.swapCursor(data)
+            }
+
+            GlobalViewstate.SeasonsLoaderFlags.noCache = false
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {

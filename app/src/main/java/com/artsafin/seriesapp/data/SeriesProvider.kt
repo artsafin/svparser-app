@@ -33,11 +33,12 @@ class SeriesProvider : ContentProvider() {
     override fun query(uri: Uri, projection: Array<String>?, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
         val selArgs = SelectionArgs(projection, selection, selectionArgs, sortOrder)
         LOGD("query $uri: $selArgs")
+        val cached = uri.getBooleanQueryParameter(PARAM_CACHED, false)
         return when (ContractMatcher.matchUri(uri)) {
-            Serials.MATCHER_ID -> api.serials(uri.getQueryParameter(PARAM_SEARCH), selArgs)
+            Serials.MATCHER_ID -> api.serials(uri.getQueryParameter(PARAM_SEARCH), cached, selArgs)
 
-            Seasons.BySerial.MATCHER_ID -> api.seasonsBySerial(ContentUris.parseId(uri), selArgs)
-            Episodes.BySeason.MATCHER_ID -> api.episodesBySeason(ContentUris.parseId(uri), uri.getBooleanQueryParameter(PARAM_CACHED, false))
+            Seasons.BySerial.MATCHER_ID -> api.seasonsBySerial(ContentUris.parseId(uri), cached, selArgs)
+            Episodes.BySeason.MATCHER_ID -> api.episodesBySeason(ContentUris.parseId(uri), cached)
 
             Seasons.Cached.MATCHER_ID -> api.seasons(selArgs)
             Episodes.Cached.MATCHER_ID -> api.episodes(selArgs)

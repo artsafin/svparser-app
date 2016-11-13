@@ -41,12 +41,14 @@ object Serials {
     val NUM_SEASONS = "num_seasons"
     val UPDATE_TS = "update_ts"
 
-    fun fetchUrl(search: String?): Uri {
+    fun fetchUrl(search: String?, noCache: Boolean = false): Uri {
         val builder = baseUri.buildUpon().appendPath(PATH)
 
         if (search != null) {
             builder.appendQueryParameter(SeriesProvider.PARAM_SEARCH, search)
         }
+
+        builder.appendQueryParameter(SeriesProvider.PARAM_CACHED, if (noCache) "false" else "true")
 
         return builder.build()
     }
@@ -92,8 +94,12 @@ object Seasons {
         val MATCHER_ID = 1
         val MIME_TYPE_DIR = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + PATH
 
-        fun urlSeasonsBySerial(id: Long): Uri {
-            return ContentUris.appendId(baseUri.buildUpon().appendEncodedPath(PATH), id).build()
+        fun urlSeasonsBySerial(id: Long, noCache: Boolean = false): Uri {
+            val builder = ContentUris.appendId(baseUri.buildUpon().appendEncodedPath(PATH), id)
+
+            builder.appendQueryParameter(SeriesProvider.PARAM_CACHED, if (noCache) "false" else "true")
+
+            return builder.build()
         }
     }
 

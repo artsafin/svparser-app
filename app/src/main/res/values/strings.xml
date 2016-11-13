@@ -25,4 +25,5 @@
     <string name="are_you_sure_to_clear_watches">Are you sure you want to reset watched?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="refresh">Refresh</string>
 </resources>

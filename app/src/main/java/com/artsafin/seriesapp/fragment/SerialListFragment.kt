@@ -42,19 +42,25 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
     lateinit private var listView: ListView
     lateinit private var adapter: SerialListCursorAdapter
 
-    open protected fun getLoader() = CursorLoader(
-            activity,
-            Serials.fetchUrl(search),
-            Serials.ListProjection.FIELDS,
-            null,
-            null,
-            Serials.ListProjection.SORT_ORDER)
+    open protected fun getLoader(): CursorLoader {
+        return CursorLoader(
+                activity,
+                Serials.fetchUrl(search, GlobalViewstate.SerialsLoaderFlags.noCache),
+                Serials.ListProjection.FIELDS,
+                null,
+                null,
+                Serials.ListProjection.SORT_ORDER)
+    }
 
     private val loaderCallbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(id: Int, args: Bundle?) = getLoader()
 
-        override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-            adapter.swapCursor(data)
+        override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
+            if (data != null) {
+                adapter.swapCursor(data)
+            }
+
+            GlobalViewstate.SerialsLoaderFlags.noCache = false
         }
 
         override fun onLoaderReset(loader: Loader<Cursor>) {
@@ -62,7 +68,7 @@ open class SerialListFragment : Fragment(), AdapterView.OnItemClickListener {
         }
     }
 
-    private val searchViewCallbacks = object: SearchView.OnQueryTextListener, SearchView.OnCloseListener {
+    private val searchViewCallbacks = object : SearchView.OnQueryTextListener, SearchView.OnCloseListener {
         override fun onClose(): Boolean {
             if (!TextUtils.isEmpty(searchView?.query)) {
                 searchView?.setQuery(null, true)

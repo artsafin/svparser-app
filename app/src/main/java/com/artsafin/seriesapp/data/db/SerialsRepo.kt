@@ -52,9 +52,9 @@ class SerialsRepo(private val db: Database) {
         return null
     }
 
-    fun fetchOrLoad(search: String?, selArgs: SelectionArgs, loader: () -> List<Serial>): Cursor {
+    fun fetchOrLoad(search: String?, useCache: Boolean, selArgs: SelectionArgs, loader: () -> List<Serial>): Cursor {
         val c = fetch(search, selArgs)
-        if (c.count == 0) {
+        if (!useCache || c.count == 0) {
             LOGD("serials: fetch from api, search=$search")
             loadAndInsertSerials(loader)
             return fetch(search, selArgs)
@@ -83,6 +83,8 @@ class SerialsRepo(private val db: Database) {
         val db = db.writableDatabase
         try {
             db.beginTransaction()
+
+            db.delete(TABLE, "", arrayOf())
 
             loader().forEach {
                 db.insert(TABLE, null, ContentValues().apply {

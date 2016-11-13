@@ -1,6 +1,7 @@
 package com.artsafin.seriesapp.activity
 
 import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import com.artsafin.seriesapp.dto.Season
 import com.artsafin.seriesapp.dto.Serial
@@ -10,6 +11,14 @@ object GlobalViewstate {
     val season = DirtyState()
     val serial = DirtyState()
     val episode = DirtyState()
+
+    object SerialsLoaderFlags {
+        var noCache: Boolean = false
+    }
+
+    object SeasonsLoaderFlags {
+        var noCache: Boolean = false
+    }
 
     val viewState = ViewState()
 }
@@ -25,6 +34,7 @@ data class DirtyState(private var _dirty: Boolean = false) {
     }
 
     fun ifDirty(loaderId: Int, fn: () -> Unit) {
+        Log.d("ViewState", "ifDirty: $_dirty, $loaderId, skippedLoaders=$skippedLoaders")
         if (_dirty && !skippedLoaders.contains(loaderId)) {
             fn()
             skippedLoaders.add(loaderId)
